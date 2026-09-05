@@ -1671,6 +1671,7 @@
                 courseFacultyLabel: 'Faculty',
                 courseFieldLabel: 'Fields of Study',
                 courseFieldHint: 'Select all fields of study this course is offered to',
+                courseFieldSelectFacultyFirst: 'Select a faculty first',
                 courseSemesterLabel: 'Semester',
                 courseSemesterHint: 'Enter the semester number, or two numbers like 6/7 if offered in both',
                 courseProfessorLabel: 'Professor',
@@ -1767,6 +1768,7 @@
                 courseFacultyLabel: 'Fakultät',
                 courseFieldLabel: 'Studienfelder',
                 courseFieldHint: 'Wähle alle Studienfelder aus, für die dieser Kurs angeboten wird',
+                courseFieldSelectFacultyFirst: 'Wähle zuerst eine Fakultät',
                 courseSemesterLabel: 'Semester',
                 courseSemesterHint: 'Gib die Semesterzahl ein, oder zwei Zahlen wie 6/7, falls in beiden angeboten',
                 courseProfessorLabel: 'Professor',
@@ -2489,12 +2491,10 @@
 
         function populateFilters() {
             const facultySelect = document.getElementById('facultyFilter');
-            const fieldSelect = document.getElementById('fieldFilter');
             const semesterSelect = document.getElementById('semesterFilter');
             const professorInput = document.getElementById('professorFilter');
 
             const currentFaculty = facultySelect.value;
-            const currentField = fieldSelect.value;
             const currentSemester = semesterSelect.value;
             const currentProfessor = professorInput.value;
 
@@ -2514,16 +2514,7 @@
                 facultySelect.value = currentFaculty;
             }
 
-            const selectedFaculty = facultySelect.value;
-            const fields = getFieldOptions(selectedFaculty || '');
-            fieldSelect.innerHTML = `<option value="">${t('fieldFilterLabel')}</option>`;
-            fields.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f;
-                opt.textContent = f;
-                fieldSelect.appendChild(opt);
-            });
-            if (fields.includes(currentField)) fieldSelect.value = currentField;
+            refreshFieldFilterOptions();
 
             semesterSelect.innerHTML = `<option value="">${t('semesterFilterLabel')}</option>`;
             SEMESTER_OPTIONS.forEach(s => {
@@ -2540,13 +2531,42 @@
             updateAutocompleteSuggestions();
         }
 
+        // Rebuilds the "Field of Study" filter dropdown to only list the
+        // fields that belong to the currently selected Faculty filter (or
+        // every field, if no faculty is selected). Keeps the current
+        // selection if it's still valid for the new list.
+        function refreshFieldFilterOptions() {
+            const fieldSelect = document.getElementById('fieldFilter');
+            const facultySelect = document.getElementById('facultyFilter');
+            const currentField = fieldSelect.value;
+
+            const selectedFaculty = facultySelect.value;
+            const fields = getFieldOptions(selectedFaculty || '');
+            fieldSelect.innerHTML = `<option value="">${t('fieldFilterLabel')}</option>`;
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                fieldSelect.appendChild(opt);
+            });
+            if (fields.includes(currentField)) fieldSelect.value = currentField;
+        }
+
         // Renders the fields-of-study checkbox pills for the given faculty
         // (or all fields, if no faculty selected yet), preserving any
         // still-valid selections.
         function renderCourseFieldCheckboxes(previouslyChecked) {
             const fieldGroup = document.getElementById('courseFieldGroup');
             const faculty = document.getElementById('courseFaculty').value;
-            const fields = getFieldOptions(faculty || '');
+
+            // Don't show any fields until a faculty has been chosen —
+            // the field list depends entirely on the faculty.
+            if (!faculty) {
+                fieldGroup.innerHTML = `<span class="text-tertiary text-sm">${t('courseFieldSelectFacultyFirst')}</span>`;
+                return;
+            }
+
+            const fields = getFieldOptions(faculty);
             const keep = new Set(previouslyChecked || []);
 
             fieldGroup.innerHTML = fields.map(f => {
@@ -3326,6 +3346,12 @@
         // ────────────────────────────────────────────────────────────────
 
         document.getElementById('searchInput').addEventListener('input', renderCourseGrid);
+        document.getElementById('facultyFilter').addEventListener('change', () => {
+            // Narrow the Field of Study filter down to this faculty's
+            // fields before re-rendering the grid.
+            refreshFieldFilterOptions();
+            renderCourseGrid();
+        });
         document.getElementById('fieldFilter').addEventListener('change', renderCourseGrid);
         document.getElementById('semesterFilter').addEventListener('change', renderCourseGrid);
         document.getElementById('professorFilter').addEventListener('input', renderCourseGrid);
