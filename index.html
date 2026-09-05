@@ -490,6 +490,63 @@
             background: var(--border);
         }
 
+        .auth-footer-link {
+            margin-top: 14px;
+            font-size: 0.8125rem;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
+        .auth-footer-link a {
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .auth-footer-link a:hover {
+            color: var(--thma-blue);
+            text-decoration: underline;
+        }
+
+        /* ─────────────── Field-of-study checkbox group ─────────────── */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .checkbox-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--surface);
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+        }
+        .checkbox-pill input {
+            margin: 0;
+            accent-color: var(--thma-blue);
+        }
+        .checkbox-pill:hover {
+            border-color: var(--thma-blue-30);
+        }
+        .checkbox-pill.checked {
+            background: var(--thma-blue-10);
+            border-color: var(--thma-blue);
+            color: var(--thma-blue);
+        }
+        .field-hint {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            display: block;
+        }
+
         /* ─────────────── Main Layout ─────────────── */
         #main-view {
             display: flex;
@@ -1295,7 +1352,11 @@
                 </form>
 
                 <div class="auth-toggle" id="authToggle">
-                    <span id="authToggleText">Already have an account?</span> <a id="toggleAuthLink">Sign In</a>
+                    <span id="authToggleText">Don't have an account yet?</span> <a id="toggleAuthLink">Sign Up</a>
+                </div>
+
+                <div class="auth-footer-link">
+                    <span id="authFeedbackText">Trouble signing in or have feedback?</span> <a id="authFeedbackLink">Contact us</a>
                 </div>
             </div>
         </div>
@@ -1314,12 +1375,12 @@
                     THMA Feedback
                 </div>
                 <div class="topbar-actions">
-                    <button class="lang-toggle" id="langToggle">🇬🇧 EN</button>
                     <div class="topbar-user" id="profileTrigger">
                         <div class="avatar" id="userAvatar">M</div>
                         <span id="userNameDisplay">User</span>
                     </div>
                     <button class="btn btn-secondary btn-sm" id="addCourseBtn">+ New Course</button>
+                    <button class="btn btn-ghost btn-sm" id="feedbackBtn">✉️ Feedback</button>
                     <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
                 </div>
             </header>
@@ -1413,25 +1474,20 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="courseField" id="courseFieldLabel">Field of Study</label>
-                                <select id="courseField" required>
-                                    <option value="">Select Field</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row" style="margin-top:16px;">
-                            <div class="form-group">
-                                <label for="courseSemester" id="courseSemesterLabel">Semester</label>
-                                <select id="courseSemester" required>
-                                    <option value="">Select Semester</option>
-                                    <!-- populated by JS -->
-                                </select>
-                            </div>
-                            <div class="form-group">
                                 <label for="courseProfessor" id="courseProfessorLabel">Professor</label>
                                 <input type="text" id="courseProfessor" list="professorSuggestionsAdd" placeholder="e.g. Dr. Smith" required />
                                 <datalist id="professorSuggestionsAdd"></datalist>
                             </div>
+                        </div>
+                        <div class="form-group" style="margin-top:16px;">
+                            <label id="courseFieldLabel">Fields of Study</label>
+                            <div class="checkbox-group" id="courseFieldGroup"></div>
+                            <span class="field-hint" id="courseFieldHint">Select all fields of study this course is offered to</span>
+                        </div>
+                        <div class="form-group" style="margin-top:16px; max-width:260px;">
+                            <label for="courseSemester" id="courseSemesterLabel">Semester</label>
+                            <input type="text" id="courseSemester" placeholder="e.g. 3 or 6/7" required />
+                            <span class="field-hint" id="courseSemesterHint">Enter the semester number, or two numbers like 6/7 if offered in both</span>
                         </div>
                     </div>
 
@@ -1487,16 +1543,8 @@
                     <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                         <div class="input-group">
                             <label for="editSemesterTaken" id="editSemesterTakenLabel">Semester taken</label>
-                            <select id="editSemesterTaken">
-                                <option value="1">1st semester</option>
-                                <option value="2">2nd semester</option>
-                                <option value="3">3rd semester</option>
-                                <option value="4">4th semester</option>
-                                <option value="5">5th semester</option>
-                                <option value="6">6th semester</option>
-                                <option value="7">7th semester</option>
-                                <option value="8">8th semester</option>
-                            </select>
+                            <input type="text" id="editSemesterTaken" placeholder="e.g. 24 or 23/24" />
+                            <span class="field-hint" id="editSemesterTakenHint">Enter the year, e.g. 24 for SS24, or 23/24 for WS23/24</span>
                         </div>
                         <div class="input-group">
                             <label for="editWorkload" id="editWorkloadLabel">Workload</label>
@@ -1551,6 +1599,37 @@
             </div>
         </div>
 
+        <!-- ─── MODAL: Feedback / Contact ─── -->
+        <div class="modal-overlay hidden" id="feedbackModal">
+            <div class="modal" style="max-width:460px;">
+                <div class="modal-header">
+                    <h2 id="feedbackModalTitle">Contact / Feedback</h2>
+                    <button class="modal-close" data-modal-close="feedbackModal">✕</button>
+                </div>
+                <p id="feedbackIntro" style="margin-bottom:16px; color:var(--text-secondary); font-size:0.9375rem;">
+                    Having trouble or a suggestion for improvement? Send us a message — it'll open in your email app.
+                </p>
+                <form id="feedbackForm">
+                    <div class="input-group mb-2">
+                        <label for="feedbackType" id="feedbackTypeLabel">Topic</label>
+                        <select id="feedbackType">
+                            <option value="problem" id="feedbackTypeProblemOpt">Problem / Bug</option>
+                            <option value="suggestion" id="feedbackTypeSuggestionOpt">Suggestion</option>
+                            <option value="other" id="feedbackTypeOtherOpt">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group mb-2">
+                        <label for="feedbackMessage" id="feedbackMessageLabel">Message</label>
+                        <textarea id="feedbackMessage" rows="4" required></textarea>
+                    </div>
+                    <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                        <button type="button" class="btn btn-secondary" data-modal-close="feedbackModal" id="feedbackCancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="feedbackSendBtn">Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -1571,6 +1650,10 @@
                 signupBtn: 'Create Account',
                 authToggleText: 'Already have an account?',
                 toggleLinkText: 'Sign In',
+                authToggleTextLogin: 'Don\'t have an account yet?',
+                toggleLinkTextLogin: 'Sign Up',
+                authFeedbackText: 'Trouble signing in or have feedback?',
+                authFeedbackLink: 'Contact us',
                 searchPlaceholder: 'Search for courses by name or code…',
                 facultyFilterLabel: 'Faculty',
                 fieldFilterLabel: 'Field of Study',
@@ -1586,8 +1669,10 @@
                 courseCodeLabel: 'Course Code',
                 courseNameLabel: 'Course Name',
                 courseFacultyLabel: 'Faculty',
-                courseFieldLabel: 'Field of Study',
+                courseFieldLabel: 'Fields of Study',
+                courseFieldHint: 'Select all fields of study this course is offered to',
                 courseSemesterLabel: 'Semester',
+                courseSemesterHint: 'Enter the semester number, or two numbers like 6/7 if offered in both',
                 courseProfessorLabel: 'Professor',
                 duplicateHint: '⚠️ A course with these exact details already exists. Click "Go to Course" to view it.',
                 submitCourseBtn: 'Create Course',
@@ -1602,6 +1687,7 @@
                 editReview: 'Edit',
                 editReviewModalTitle: 'Edit Review',
                 editSemesterTakenLabel: 'Semester taken',
+                editSemesterTakenHint: 'Enter the year, e.g. 24 for SS24, or 23/24 for WS23/24',
                 editWorkloadLabel: 'Workload',
                 editProfessorLabel: 'Professor',
                 editGradesLabel: 'Good Grades',
@@ -1615,6 +1701,16 @@
                 submitReview: 'Submit Review',
                 noCoursesFound: 'No courses found',
                 languageLabel: 'Language',
+                feedbackBtn: '✉️ Feedback',
+                feedbackModalTitle: 'Contact / Feedback',
+                feedbackIntro: 'Having trouble or a suggestion for improvement? Send us a message — it\'ll open in your email app.',
+                feedbackTypeLabel: 'Topic',
+                feedbackTypeProblem: 'Problem / Bug',
+                feedbackTypeSuggestion: 'Suggestion',
+                feedbackTypeOther: 'Other',
+                feedbackMessageLabel: 'Message',
+                feedbackCancelBtn: 'Cancel',
+                feedbackSendBtn: 'Send Email',
                 // Toast messages
                 toastWelcome: (name) => `Welcome, ${name}!`,
                 toastSignOut: 'Signed out.',
@@ -1632,6 +1728,11 @@
                 toastSignInRequired: 'Please sign in to leave a review.',
                 toastSelectSemester: 'Please select the semester you took the course.',
                 toastSelectRating: 'Please select a star rating.',
+                toastSelectField: 'Please select at least one field of study.',
+                toastInvalidSemester: 'Please enter a valid semester, e.g. 3 or 6/7.',
+                toastInvalidSemesterTaken: 'Please enter a valid semester taken, e.g. 24 or 23/24.',
+                toastFeedbackMessage: 'Please write a message first.',
+                toastFeedbackOpening: 'Opening your email app…',
             },
             de: {
                 authSubtitle: 'Teile deine Kurserfahrungen mit anderen Studierenden',
@@ -1645,6 +1746,10 @@
                 signupBtn: 'Account erstellen',
                 authToggleText: 'Bereits ein Konto?',
                 toggleLinkText: 'Anmelden',
+                authToggleTextLogin: 'Noch kein Konto?',
+                toggleLinkTextLogin: 'Registrieren',
+                authFeedbackText: 'Probleme beim Anmelden oder Feedback?',
+                authFeedbackLink: 'Kontaktiere uns',
                 searchPlaceholder: 'Kurse nach Name oder Code durchsuchen…',
                 facultyFilterLabel: 'Fakultät',
                 fieldFilterLabel: 'Studienfeld',
@@ -1660,8 +1765,10 @@
                 courseCodeLabel: 'Kurs-Code',
                 courseNameLabel: 'Kursname',
                 courseFacultyLabel: 'Fakultät',
-                courseFieldLabel: 'Studienfeld',
+                courseFieldLabel: 'Studienfelder',
+                courseFieldHint: 'Wähle alle Studienfelder aus, für die dieser Kurs angeboten wird',
                 courseSemesterLabel: 'Semester',
+                courseSemesterHint: 'Gib die Semesterzahl ein, oder zwei Zahlen wie 6/7, falls in beiden angeboten',
                 courseProfessorLabel: 'Professor',
                 duplicateHint: '⚠️ Ein Kurs mit genau diesen Details existiert bereits. Klicke auf "Zum Kurs", um ihn anzusehen.',
                 submitCourseBtn: 'Kurs erstellen',
@@ -1676,6 +1783,7 @@
                 editReview: 'Bearbeiten',
                 editReviewModalTitle: 'Bewertung bearbeiten',
                 editSemesterTakenLabel: 'Semester (belegt)',
+                editSemesterTakenHint: 'Gib das Jahr ein, z. B. 24 für SS24, oder 23/24 für WS23/24',
                 editWorkloadLabel: 'Arbeitsaufwand',
                 editProfessorLabel: 'Professor',
                 editGradesLabel: 'Gute Noten',
@@ -1689,6 +1797,16 @@
                 submitReview: 'Bewertung absenden',
                 noCoursesFound: 'Keine Kurse gefunden',
                 languageLabel: 'Sprache',
+                feedbackBtn: '✉️ Feedback',
+                feedbackModalTitle: 'Kontakt / Feedback',
+                feedbackIntro: 'Hast du Probleme oder einen Verbesserungsvorschlag? Schick uns eine Nachricht — sie öffnet sich in deiner E-Mail-App.',
+                feedbackTypeLabel: 'Thema',
+                feedbackTypeProblem: 'Problem / Fehler',
+                feedbackTypeSuggestion: 'Vorschlag',
+                feedbackTypeOther: 'Sonstiges',
+                feedbackMessageLabel: 'Nachricht',
+                feedbackCancelBtn: 'Abbrechen',
+                feedbackSendBtn: 'E-Mail senden',
                 toastWelcome: (name) => `Willkommen, ${name}!`,
                 toastSignOut: 'Abgemeldet.',
                 toastInvalid: 'Ungültige E-Mail oder Passwort.',
@@ -1705,6 +1823,11 @@
                 toastSignInRequired: 'Bitte melde dich an, um eine Bewertung abzugeben.',
                 toastSelectSemester: 'Bitte wähle das Semester, in dem du den Kurs belegt hast.',
                 toastSelectRating: 'Bitte wähle eine Sternebewertung.',
+                toastSelectField: 'Bitte wähle mindestens ein Studienfeld aus.',
+                toastInvalidSemester: 'Bitte gib ein gültiges Semester ein, z. B. 3 oder 6/7.',
+                toastInvalidSemesterTaken: 'Bitte gib ein gültiges Semester ein, z. B. 24 oder 23/24.',
+                toastFeedbackMessage: 'Bitte schreibe zuerst eine Nachricht.',
+                toastFeedbackOpening: 'E-Mail-App wird geöffnet…',
             }
         };
 
@@ -1725,15 +1848,76 @@
             return str;
         }
 
-        function semesterDisplay(num) {
+        // `value` is the course's structural semester, e.g. "3" or "6/7"
+        // (offered in both the 6th and 7th semester). Renders each number
+        // as an ordinal, joined with "/".
+        function semesterDisplay(value) {
+            if (value === null || value === undefined || value === '') return '';
+            const parts = String(value).split('/').map(s => s.trim()).filter(Boolean);
             if (currentLang === 'de') {
-                return `${num}. Semester`;
+                return parts.map(p => `${p}.`).join('/') + ' Semester';
             } else {
                 const suffix = ['th', 'st', 'nd', 'rd'];
-                const v = num % 100;
-                const suf = (v >= 11 && v <= 13) ? 'th' : suffix[num % 10] || 'th';
-                return `${num}${suf} semester`;
+                return parts.map(p => {
+                    const n = parseInt(p, 10);
+                    const v = n % 100;
+                    const suf = (v >= 11 && v <= 13) ? 'th' : suffix[n % 10] || 'th';
+                    return `${n}${suf}`;
+                }).join('/') + ' semester';
             }
+        }
+
+        // Validates/normalizes the free-text "semester" input on the Add
+        // Course form: a single number ("3") or two numbers separated by
+        // a slash ("6/7") for courses offered across two semesters.
+        // Returns the normalized string, or null if invalid.
+        function normalizeCourseSemester(raw) {
+            const val = (raw || '').trim().replace(/\s+/g, '');
+            const m = val.match(/^(\d{1,2})(?:\/(\d{1,2}))?$/);
+            if (!m) return null;
+            const a = parseInt(m[1], 10);
+            if (a < 1) return null;
+            if (m[2]) {
+                const b = parseInt(m[2], 10);
+                if (b < 1) return null;
+                return `${a}/${b}`;
+            }
+            return `${a}`;
+        }
+
+        // Parses the "semester taken" year input on a review, e.g. "24"
+        // (one year → Summer Semester, "SS24") or "23/24" (spans a winter
+        // → "WS23/24"). Accepts 2- or 4-digit years. Returns the
+        // formatted code, or null if invalid.
+        function parseSemesterTaken(raw) {
+            const val = (raw || '').trim().replace(/\s+/g, '');
+
+            let m = val.match(/^(\d{4}|\d{2})$/);
+            if (m) {
+                const yr = m[1].length === 4 ? m[1].slice(2) : m[1];
+                return `SS${yr}`;
+            }
+
+            m = val.match(/^(\d{4}|\d{2})\/(\d{4}|\d{2})$/);
+            if (m) {
+                const y1 = m[1].length === 4 ? parseInt(m[1].slice(2), 10) : parseInt(m[1], 10);
+                const y2 = m[2].length === 4 ? parseInt(m[2].slice(2), 10) : parseInt(m[2], 10);
+                const expected = (y1 + 1) % 100;
+                if (y2 !== expected) return null;
+                const y1s = String(y1).padStart(2, '0');
+                const y2s = String(y2).padStart(2, '0');
+                return `WS${y1s}/${y2s}`;
+            }
+
+            return null;
+        }
+
+        // Reverses parseSemesterTaken's formatting back to the raw digits,
+        // so an existing review (e.g. "WS23/24") can be re-edited as "23/24".
+        function rawFromSemesterCode(code) {
+            if (!code) return '';
+            if (code.startsWith('WS') || code.startsWith('SS')) return code.slice(2);
+            return code;
         }
 
         // ────────────────────────────────────────────────────────────────
@@ -1760,7 +1944,11 @@
 
         const ALL_FACULTIES = Object.keys(FACULTY_FIELDS);
         const ALL_FIELDS = Object.values(FACULTY_FIELDS).flat();
+        // Used only for the "Semester" filter dropdown on the dashboard.
         const SEMESTER_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+        // Where the "Feedback" button sends its mailto: link. Update this
+        // to your real support/contact address.
+        const SUPPORT_EMAIL = 'feedback@stud.hs-mannheim.de';
 
         // ────────────────────────────────────────────────────────────────
         //  SUPABASE-BACKED DATA LAYER
@@ -1777,9 +1965,14 @@
 
         // DB (snake_case) → app (camelCase)
         function courseFromDb(c) {
+            // field_of_study is stored as a Postgres array; tolerate a
+            // plain string too, in case of old/unmigrated rows.
+            const fields = Array.isArray(c.field_of_study)
+                ? c.field_of_study
+                : (c.field_of_study ? [c.field_of_study] : []);
             return {
                 id: c.id, code: c.code, name: c.name, faculty: c.faculty,
-                fieldOfStudy: c.field_of_study, semester: c.semester, professor: c.professor,
+                fieldOfStudy: fields, semester: c.semester, professor: c.professor,
             };
         }
         function reviewFromDb(r) {
@@ -1958,7 +2151,6 @@
         function setLanguage(lang) {
             currentLang = lang;
             localStorage.setItem('thma_lang', lang);
-            document.getElementById('langToggle').textContent = lang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
             document.getElementById('authLangToggle').textContent = lang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
             applyTranslations();
             if (currentUser) {
@@ -1975,16 +2167,9 @@
             populateAllSemesterSelects();
         }
 
-        document.getElementById('langToggle').addEventListener('click', async () => {
-            const newLang = currentLang === 'en' ? 'de' : 'en';
-            if (currentUser) {
-                currentUser.lang = newLang;
-                sb.from('profiles').update({ lang: newLang }).eq('id', currentUser.id)
-                    .then(({ error }) => { if (error) console.error('save lang', error); });
-            }
-            setLanguage(newLang);
-        });
-
+        // Note: the language can no longer be changed from the main
+        // dashboard — only from the profile modal (saveProfileLang below)
+        // or the login page (authLangToggle here).
         document.getElementById('authLangToggle').addEventListener('click', () => {
             const newLang = currentLang === 'en' ? 'de' : 'en';
             setLanguage(newLang);
@@ -2007,7 +2192,9 @@
             document.getElementById('courseNameLabel').textContent = t('courseNameLabel');
             document.getElementById('courseFacultyLabel').textContent = t('courseFacultyLabel');
             document.getElementById('courseFieldLabel').textContent = t('courseFieldLabel');
+            document.getElementById('courseFieldHint').textContent = t('courseFieldHint');
             document.getElementById('courseSemesterLabel').textContent = t('courseSemesterLabel');
+            document.getElementById('courseSemesterHint').textContent = t('courseSemesterHint');
             document.getElementById('courseProfessorLabel').textContent = t('courseProfessorLabel');
             const hint = document.getElementById('duplicateHint');
             hint.textContent = t('duplicateHint');
@@ -2019,6 +2206,7 @@
             document.getElementById('profileModalTitle').textContent = t('profileModalTitle');
             document.getElementById('editReviewModalTitle').textContent = t('editReviewModalTitle');
             document.getElementById('editSemesterTakenLabel').textContent = t('editSemesterTakenLabel');
+            document.getElementById('editSemesterTakenHint').textContent = t('editSemesterTakenHint');
             document.getElementById('editWorkloadLabel').textContent = t('editWorkloadLabel');
             document.getElementById('editProfessorLabel').textContent = t('editProfessorLabel');
             document.getElementById('editGradesLabel').textContent = t('editGradesLabel');
@@ -2026,6 +2214,16 @@
             document.getElementById('editCommentLabel').textContent = t('editCommentLabel');
             document.getElementById('editCancelBtn').textContent = t('editCancelBtn');
             document.getElementById('editSaveBtn').textContent = t('editSaveBtn');
+            document.getElementById('feedbackBtn').textContent = t('feedbackBtn');
+            document.getElementById('feedbackModalTitle').textContent = t('feedbackModalTitle');
+            document.getElementById('feedbackIntro').textContent = t('feedbackIntro');
+            document.getElementById('feedbackTypeLabel').textContent = t('feedbackTypeLabel');
+            document.getElementById('feedbackTypeProblemOpt').textContent = t('feedbackTypeProblem');
+            document.getElementById('feedbackTypeSuggestionOpt').textContent = t('feedbackTypeSuggestion');
+            document.getElementById('feedbackTypeOtherOpt').textContent = t('feedbackTypeOther');
+            document.getElementById('feedbackMessageLabel').textContent = t('feedbackMessageLabel');
+            document.getElementById('feedbackCancelBtn').textContent = t('feedbackCancelBtn');
+            document.getElementById('feedbackSendBtn').textContent = t('feedbackSendBtn');
             applyAuthTranslations();
             populateAllSemesterSelects();
             if (!document.getElementById('course-detail-view').classList.contains('hidden') && selectedCourseId) {
@@ -2043,42 +2241,18 @@
             document.getElementById('signupPasswordLabel').textContent = t('signupPasswordLabel');
             document.getElementById('signupConfirmLabel').textContent = t('signupConfirmLabel');
             document.getElementById('signupBtn').textContent = t('signupBtn');
-            document.getElementById('authToggleText').textContent = t('authToggleText');
-            document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
+            // The toggle text/link depend on which form is currently shown.
+            document.getElementById('authToggleText').textContent = isLogin ? t('authToggleTextLogin') : t('authToggleText');
+            document.getElementById('toggleAuthLink').textContent = isLogin ? t('toggleLinkTextLogin') : t('toggleLinkText');
+            document.getElementById('authFeedbackText').textContent = t('authFeedbackText');
+            document.getElementById('authFeedbackLink').textContent = t('authFeedbackLink');
         }
 
+        // courseSemester (Add Course), inlineSemesterTaken (write a review)
+        // and editSemesterTaken (edit a review) are now free-text inputs,
+        // not selects, so only the "Semester" filter dropdown needs
+        // populating here.
         function populateAllSemesterSelects() {
-            const semSelect = document.getElementById('courseSemester');
-            if (semSelect) {
-                const currentVal = semSelect.value;
-                semSelect.innerHTML = `<option value="">${t('courseSemesterLabel')}</option>`;
-                SEMESTER_OPTIONS.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s;
-                    opt.textContent = semesterDisplay(parseInt(s));
-                    semSelect.appendChild(opt);
-                });
-                if (SEMESTER_OPTIONS.includes(currentVal)) semSelect.value = currentVal;
-            }
-
-            const inlineSem = document.getElementById('inlineSemesterTaken');
-            if (inlineSem) {
-                const val = inlineSem.value;
-                inlineSem.innerHTML = SEMESTER_OPTIONS.map(s =>
-                    `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`
-                ).join('');
-                if (SEMESTER_OPTIONS.includes(val)) inlineSem.value = val;
-            }
-
-            const editSem = document.getElementById('editSemesterTaken');
-            if (editSem) {
-                const val = editSem.value;
-                editSem.innerHTML = SEMESTER_OPTIONS.map(s =>
-                    `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`
-                ).join('');
-                if (SEMESTER_OPTIONS.includes(val)) editSem.value = val;
-            }
-
             const filterSem = document.getElementById('semesterFilter');
             if (filterSem) {
                 const val = filterSem.value;
@@ -2086,7 +2260,7 @@
                 SEMESTER_OPTIONS.forEach(s => {
                     const opt = document.createElement('option');
                     opt.value = s;
-                    opt.textContent = semesterDisplay(parseInt(s));
+                    opt.textContent = semesterDisplay(s);
                     filterSem.appendChild(opt);
                 });
                 if (SEMESTER_OPTIONS.includes(val)) filterSem.value = val;
@@ -2113,11 +2287,13 @@
             if (login) {
                 document.querySelector('#loginForm').style.display = 'block';
                 document.querySelector('#signupForm').style.display = 'none';
-                document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
+                document.getElementById('authToggleText').textContent = t('authToggleTextLogin');
+                document.getElementById('toggleAuthLink').textContent = t('toggleLinkTextLogin');
                 document.querySelector('.auth-divider').style.display = 'block';
             } else {
                 document.querySelector('#loginForm').style.display = 'none';
                 document.querySelector('#signupForm').style.display = 'block';
+                document.getElementById('authToggleText').textContent = t('authToggleText');
                 document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
                 document.querySelector('.auth-divider').style.display = 'none';
             }
@@ -2222,6 +2398,46 @@
         });
 
         // ────────────────────────────────────────────────────────────────
+        //  FEEDBACK / CONTACT
+        //  No backend mail-sending is set up, so this simply opens a
+        //  mailto: link (pre-filled) in the user's own email app.
+        // ────────────────────────────────────────────────────────────────
+
+        function openFeedbackModal() {
+            document.getElementById('feedbackForm').reset();
+            openModal('feedbackModal');
+        }
+
+        document.getElementById('feedbackBtn').addEventListener('click', openFeedbackModal);
+        document.getElementById('authFeedbackLink').addEventListener('click', openFeedbackModal);
+
+        document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const type = document.getElementById('feedbackType').value;
+            const message = document.getElementById('feedbackMessage').value.trim();
+
+            if (!message) {
+                showToast(t('toastFeedbackMessage'), 'error');
+                return;
+            }
+
+            const topicLabel = {
+                problem: t('feedbackTypeProblem'),
+                suggestion: t('feedbackTypeSuggestion'),
+                other: t('feedbackTypeOther'),
+            }[type] || type;
+
+            const subject = `THMA Feedback: ${topicLabel}`;
+            const senderLine = currentUser ? `${currentUser.name} (${currentUser.email})` : 'Not signed in';
+            const body = `${message}\n\n— ${senderLine}`;
+
+            window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+            closeModal('feedbackModal');
+            showToast(t('toastFeedbackOpening'), 'info');
+        });
+
+        // ────────────────────────────────────────────────────────────────
         //  RENDER: APP
         // ────────────────────────────────────────────────────────────────
 
@@ -2313,7 +2529,7 @@
             SEMESTER_OPTIONS.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s;
-                opt.textContent = semesterDisplay(parseInt(s));
+                opt.textContent = semesterDisplay(s);
                 semesterSelect.appendChild(opt);
             });
             if (SEMESTER_OPTIONS.includes(currentSemester)) semesterSelect.value = currentSemester;
@@ -2324,9 +2540,41 @@
             updateAutocompleteSuggestions();
         }
 
+        // Renders the fields-of-study checkbox pills for the given faculty
+        // (or all fields, if no faculty selected yet), preserving any
+        // still-valid selections.
+        function renderCourseFieldCheckboxes(previouslyChecked) {
+            const fieldGroup = document.getElementById('courseFieldGroup');
+            const faculty = document.getElementById('courseFaculty').value;
+            const fields = getFieldOptions(faculty || '');
+            const keep = new Set(previouslyChecked || []);
+
+            fieldGroup.innerHTML = fields.map(f => {
+                const id = 'courseFieldOpt_' + f.replace(/[^a-zA-Z0-9]/g, '_');
+                const checked = keep.has(f) ? 'checked' : '';
+                return `
+                  <label class="checkbox-pill ${checked ? 'checked' : ''}" data-field="${f}">
+                    <input type="checkbox" id="${id}" value="${f}" ${checked} />
+                    ${f}
+                  </label>
+                `;
+            }).join('');
+
+            fieldGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    this.closest('.checkbox-pill').classList.toggle('checked', this.checked);
+                    checkDuplicateCourse();
+                });
+            });
+        }
+
+        function getSelectedCourseFields() {
+            return Array.from(document.querySelectorAll('#courseFieldGroup input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+        }
+
         function populateFacultyFieldDropdowns() {
             const facSelect = document.getElementById('courseFaculty');
-            const fieldSelect = document.getElementById('courseField');
 
             facSelect.innerHTML = `<option value="">${t('courseFacultyLabel')}</option>`;
             ALL_FACULTIES.forEach(f => {
@@ -2336,51 +2584,45 @@
                 facSelect.appendChild(opt);
             });
 
-            const selectedFaculty = facSelect.value;
-            const fields = getFieldOptions(selectedFaculty || '');
-            fieldSelect.innerHTML = `<option value="">${t('courseFieldLabel')}</option>`;
-            fields.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f;
-                opt.textContent = f;
-                fieldSelect.appendChild(opt);
-            });
+            renderCourseFieldCheckboxes([]);
         }
 
         document.getElementById('courseFaculty').addEventListener('change', function() {
-            const faculty = this.value;
-            const fieldSelect = document.getElementById('courseField');
-            const fields = getFieldOptions(faculty || '');
-            fieldSelect.innerHTML = `<option value="">${t('courseFieldLabel')}</option>`;
-            fields.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f;
-                opt.textContent = f;
-                fieldSelect.appendChild(opt);
-            });
+            const currentlyChecked = getSelectedCourseFields();
+            renderCourseFieldCheckboxes(currentlyChecked);
             checkDuplicateCourse();
         });
 
         document.getElementById('courseCode').addEventListener('input', checkDuplicateCourse);
         document.getElementById('courseName').addEventListener('input', checkDuplicateCourse);
         document.getElementById('courseFaculty').addEventListener('change', checkDuplicateCourse);
-        document.getElementById('courseField').addEventListener('change', checkDuplicateCourse);
-        document.getElementById('courseSemester').addEventListener('change', checkDuplicateCourse);
+        document.getElementById('courseSemester').addEventListener('input', checkDuplicateCourse);
         document.getElementById('courseProfessor').addEventListener('input', checkDuplicateCourse);
+
+        // Two arrays of fields-of-study are considered "the same" if they
+        // contain the same set of values, regardless of order.
+        function sameFieldSet(a, b) {
+            if (!Array.isArray(a) || !Array.isArray(b)) return false;
+            if (a.length !== b.length) return false;
+            const sa = [...a].sort();
+            const sb = [...b].sort();
+            return sa.every((v, i) => v === sb[i]);
+        }
 
         function checkDuplicateCourse() {
             const code = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
             const faculty = document.getElementById('courseFaculty').value;
-            const field = document.getElementById('courseField').value;
-            const semester = document.getElementById('courseSemester').value;
+            const fields = getSelectedCourseFields();
+            const semester = normalizeCourseSemester(document.getElementById('courseSemester').value) ||
+                document.getElementById('courseSemester').value.trim();
             const professor = document.getElementById('courseProfessor').value.trim();
 
             const duplicate = courses.find(c =>
                 c.code === code &&
                 c.name === name &&
                 c.faculty === faculty &&
-                c.fieldOfStudy === field &&
+                sameFieldSet(c.fieldOfStudy, fields) &&
                 c.semester === semester &&
                 c.professor === professor
             );
@@ -2388,7 +2630,7 @@
             const hint = document.getElementById('duplicateHint');
             const submitBtn = document.getElementById('submitCourseBtn');
 
-            if (duplicate && code && name && faculty && field && semester && professor) {
+            if (duplicate && code && name && faculty && fields.length && semester && professor) {
                 hint.classList.add('visible');
                 submitBtn.textContent = t('goToCourseBtn');
                 submitBtn.className = 'btn btn-success btn-block';
@@ -2423,8 +2665,8 @@
                     c.name.toLowerCase().includes(query) ||
                     c.code.toLowerCase().includes(query);
                 const matchFaculty = !faculty || c.faculty === faculty;
-                const matchField = !field || c.fieldOfStudy === field;
-                const matchSemester = !semester || c.semester === semester;
+                const matchField = !field || (c.fieldOfStudy || []).includes(field);
+                const matchSemester = !semester || String(c.semester || '').split('/').includes(semester);
                 const matchProfessor = !professor || (c.professor && c.professor.toLowerCase().includes(professor));
                 return matchQuery && matchFaculty && matchField && matchSemester && matchProfessor;
             });
@@ -2497,8 +2739,8 @@
                   <div class="course-name">${c.name}</div>
                   <div class="course-meta">
                     <span class="badge">${c.faculty}</span>
-                    <span class="badge badge-blue">${c.fieldOfStudy}</span>
-                    <span class="badge">${semesterDisplay(parseInt(c.semester))}</span>
+                    ${(c.fieldOfStudy || []).map(f => `<span class="badge badge-blue">${f}</span>`).join('')}
+                    <span class="badge">${semesterDisplay(c.semester)}</span>
                     <span class="badge">${c.professor}</span>
                   </div>
                   <div class="course-rating">
@@ -2569,11 +2811,11 @@
               </div>
               <div class="info-item">
                 <span class="label">${t('fieldFilterLabel')}</span>
-                <span class="value">${c.fieldOfStudy}</span>
+                <span class="value">${(c.fieldOfStudy || []).join(', ')}</span>
               </div>
               <div class="info-item">
                 <span class="label">${t('semesterFilterLabel')}</span>
-                <span class="value">${semesterDisplay(parseInt(c.semester))}</span>
+                <span class="value">${semesterDisplay(c.semester)}</span>
               </div>
               <div class="info-item">
                 <span class="label">${t('professorFilterLabel')}</span>
@@ -2646,9 +2888,8 @@
                 <div class="form-row">
                   <div class="input-group">
                     <label for="inlineSemesterTaken">${t('editSemesterTakenLabel')}</label>
-                    <select id="inlineSemesterTaken">
-                      ${SEMESTER_OPTIONS.map(s => `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`).join('')}
-                    </select>
+                    <input type="text" id="inlineSemesterTaken" placeholder="e.g. 24 or 23/24" />
+                    <span class="field-hint">${t('editSemesterTakenHint')}</span>
                   </div>
                   <div class="input-group">
                     <label for="inlineWorkload">${t('editWorkloadLabel')}</label>
@@ -2727,7 +2968,7 @@
             });
 
             document.getElementById('inlineSubmitReview').addEventListener('click', async function() {
-                const semesterTaken = document.getElementById('inlineSemesterTaken').value;
+                const semesterTakenRaw = document.getElementById('inlineSemesterTaken').value;
                 const workload = parseInt(document.getElementById('inlineWorkload').value);
                 const professor = parseInt(document.getElementById('inlineProfessor').value);
                 const goodGrades = parseInt(document.getElementById('inlineGrades').value);
@@ -2738,8 +2979,13 @@
                     showToast(t('toastSignInRequired'), 'error');
                     return;
                 }
-                if (!semesterTaken) {
+                if (!semesterTakenRaw.trim()) {
                     showToast(t('toastSelectSemester'), 'error');
+                    return;
+                }
+                const semesterTaken = parseSemesterTaken(semesterTakenRaw);
+                if (!semesterTaken) {
+                    showToast(t('toastInvalidSemesterTaken'), 'error');
                     return;
                 }
                 if (reviews.some(r => r.courseId === selectedCourseId && r.userId === currentUser.id)) {
@@ -2805,7 +3051,7 @@
 
             return items.map(r => {
                 const monthYear = formatDate(r.createdAt);
-                const semester = r.semesterTaken ? semesterDisplay(parseInt(r.semesterTaken)) : '—';
+                const semester = r.semesterTaken || '—';
                 return `
               <div class="review-item">
                 <div class="review-top">
@@ -2848,20 +3094,34 @@
             const code = document.getElementById('courseCode').value.trim();
             const name = document.getElementById('courseName').value.trim();
             const faculty = document.getElementById('courseFaculty').value;
-            const field = document.getElementById('courseField').value;
-            const semester = document.getElementById('courseSemester').value;
+            const fields = getSelectedCourseFields();
             const professor = document.getElementById('courseProfessor').value.trim();
 
-            if (!code || !name || !faculty || !field || !semester || !professor) {
+            if (!code || !name || !faculty || !professor) {
                 showToast(t('toastFillAll'), 'error');
                 return;
             }
+            if (!fields.length) {
+                showToast(t('toastSelectField'), 'error');
+                return;
+            }
+
+            const semester = normalizeCourseSemester(document.getElementById('courseSemester').value);
+            if (!semester) {
+                showToast(t('toastInvalidSemester'), 'error');
+                return;
+            }
+
+            // Store the fields sorted so the same set of fields always
+            // produces the same array, both for our own duplicate check
+            // and for the database's unique constraint.
+            const sortedFields = [...fields].sort();
 
             const duplicate = courses.find(c =>
                 c.code === code &&
                 c.name === name &&
                 c.faculty === faculty &&
-                c.fieldOfStudy === field &&
+                sameFieldSet(c.fieldOfStudy, sortedFields) &&
                 c.semester === semester &&
                 c.professor === professor
             );
@@ -2875,7 +3135,7 @@
             submitBtn.disabled = true;
 
             const { data, error } = await sb.from('courses').insert({
-                code, name, faculty, field_of_study: field, semester, professor,
+                code, name, faculty, field_of_study: sortedFields, semester, professor,
                 created_by: currentUser.id,
             }).select().single();
 
@@ -2951,7 +3211,7 @@
                       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
                         <div>
                           <div style="font-weight:600;">${course ? course.name : 'Unknown Course'}</div>
-                          <div class="review-meta-sm">${course ? course.code : ''} – Took in ${r.semesterTaken ? semesterDisplay(parseInt(r.semesterTaken)) : '—'} – ${formatDate(r.createdAt)}</div>
+                          <div class="review-meta-sm">${course ? course.code : ''} – Took in ${r.semesterTaken || '—'} – ${formatDate(r.createdAt)}</div>
                         </div>
                         <span class="badge badge-rating">${r.rating} ★</span>
                       </div>
@@ -3011,7 +3271,7 @@
             if (!review) return;
 
             document.getElementById('editReviewId').value = review.id;
-            document.getElementById('editSemesterTaken').value = review.semesterTaken || '1';
+            document.getElementById('editSemesterTaken').value = rawFromSemesterCode(review.semesterTaken);
             document.getElementById('editWorkload').value = review.workload;
             document.getElementById('editProfessor').value = review.professor;
             document.getElementById('editGrades').value = review.goodGrades;
@@ -3027,8 +3287,14 @@
             const review = reviews.find(r => r.id === id);
             if (!review) return;
 
+            const semesterTaken = parseSemesterTaken(document.getElementById('editSemesterTaken').value);
+            if (!semesterTaken) {
+                showToast(t('toastInvalidSemesterTaken'), 'error');
+                return;
+            }
+
             const updates = {
-                semester_taken: document.getElementById('editSemesterTaken').value,
+                semester_taken: semesterTaken,
                 workload: parseInt(document.getElementById('editWorkload').value),
                 professor: parseInt(document.getElementById('editProfessor').value),
                 good_grades: parseInt(document.getElementById('editGrades').value),
@@ -3081,7 +3347,6 @@
         if (savedLang) {
             currentLang = savedLang;
         }
-        document.getElementById('langToggle').textContent = currentLang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
         document.getElementById('authLangToggle').textContent = currentLang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
 
         // Shows the auth screen immediately; initApp() swaps in the real
