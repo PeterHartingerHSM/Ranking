@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>THMA Course Feedback</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <!-- Supabase client library (handles auth + database calls from this static page) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="config.js"></script>
+    <style>
+        /* ─────────────── CSS Variables & Reset ─────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --thma-blue: #0000FF;
+            --thma-blue-light: #3333FF;
+            --thma-blue-dark: #0000CC;
+            --thma-blue-10: rgba(0, 0, 255, 0.10);
+            --thma-blue-20: rgba(0, 0, 255, 0.20);
+            --thma-blue-30: rgba(0, 0, 255, 0.30);
+
+            --bg: #F5F5F7;
+            --surface: #FFFFFF;
+            --surface-secondary: #F8F8FA;
+            --border: #E5E5EA;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --text-tertiary: #8E8E93;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04);
+            --radius: 14px;
+            --radius-sm: 10px;
+            --radius-xs: 8px;
+            --transition: 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        html {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            background: var(--bg);
+        }
+
+        /* ─────────────── Scrollbar ─────────────── */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+
+        /* ─────────────── Utilities ─────────────── */
+        .hidden {
+            display: none !important;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gap-1 {
+            gap: 6px;
+        }
+        .gap-2 {
+            gap: 12px;
+        }
+        .gap-3 {
+            gap: 20px;
+        }
+        .mt-1 {
+            margin-top: 8px;
+        }
+        .mt-2 {
+            margin-top: 16px;
+        }
+        .mt-3 {
+            margin-top: 24px;
+        }
+        .mb-1 {
+            margin-bottom: 8px;
+        }
+        .mb-2 {
+            margin-bottom: 16px;
+        }
+        .mb-3 {
+            margin-bottom: 24px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+        .text-tertiary {
+            color: var(--text-tertiary);
+        }
+        .text-sm {
+            font-size: 0.875rem;
+        }
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        /* ─────────────── Buttons ─────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            background: transparent;
+            color: var(--text-primary);
+        }
+        .btn-primary {
+            background: var(--thma-blue);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--thma-blue-dark);
+            transform: scale(1.02);
+            box-shadow: 0 4px 14px var(--thma-blue-30);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        .btn-secondary {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        .btn-ghost {
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: var(--thma-blue-10);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8125rem;
+        }
+        .btn-lg {
+            padding: 14px 32px;
+            font-size: 1.0625rem;
+        }
+        .btn-block {
+            width: 100%;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-success {
+            background: #34C759;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #28a745;
+        }
+
+        /* ─────────────── Inputs ─────────────── */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .input-group label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.01em;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            font-family: var(--font);
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 0.9375rem;
+            transition: var(--transition);
+            background: var(--surface);
+            color: var(--text-primary);
+            width: 100%;
+            outline: none;
+        }
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            border-color: var(--thma-blue);
+            box-shadow: 0 0 0 3px var(--thma-blue-10);
+        }
+        .input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236E6E73' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        .input-group input[list] {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236E6E73' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+
+        /* ─────────────── Toast ─────────────── */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: 100%;
+        }
+        .toast {
+            background: var(--surface);
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--thma-blue);
+            animation: slideIn 0.3s ease;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toast-success {
+            border-left-color: #34C759;
+        }
+        .toast-error {
+            border-left-color: #FF3B30;
+        }
+        .toast-info {
+            border-left-color: var(--thma-blue);
+        }
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ─────────────── Modal ─────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-overlay.hidden {
+            display: none;
+        }
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            max-width: 640px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 32px;
+            animation: scaleIn 0.25s ease;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        .modal-close:hover {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ─────────────── Stars ─────────────── */
+        .stars {
+            display: flex;
+            gap: 4px;
+        }
+        .star {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #D1D1D6;
+            transition: var(--transition);
+            user-select: none;
+        }
+        .star.active {
+            color: #FFB800;
+        }
+        .star.hover {
+            color: #FFD54F;
+        }
+        .star-sm {
+            font-size: 1rem;
+        }
+        .star-md {
+            font-size: 1.5rem;
+        }
+        .star-lg {
+            font-size: 2rem;
+        }
+
+        /* ─────────────── Badge / Chip ─────────────── */
+        .badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--surface-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .badge-blue {
+            background: var(--thma-blue-10);
+            color: var(--thma-blue);
+            border-color: var(--thma-blue-20);
+        }
+        .badge-rating {
+            background: #FFB800;
+            color: #1D1D1F;
+            border: none;
+            font-weight: 600;
+        }
+
+        /* ─────────────── App Shell ─────────────── */
+        #app {
+            width: 100%;
+            max-width: 1200px;
+            min-height: 100vh;
+            padding: 20px 24px 40px;
+        }
+
+        /* ─────────────── Auth View ─────────────── */
+        #auth-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+        }
+        .auth-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 44px 40px;
+            max-width: 420px;
+            width: 100%;
+            transition: var(--transition);
+        }
+        .auth-card .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .auth-card .logo svg {
+            width: 36px;
+            height: 36px;
+        }
+        .auth-card .logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--thma-blue);
+        }
+        .auth-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            margin-bottom: 28px;
+        }
+        .auth-card .auth-toggle {
+            margin-top: 20px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        .auth-card .auth-toggle a {
+            color: var(--thma-blue);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .auth-card .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+            color: var(--text-tertiary);
+            font-size: 0.8125rem;
+        }
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ─────────────── Main Layout ─────────────── */
+        #main-view {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Top Bar */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0 12px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--thma-blue);
+        }
+        .topbar-brand svg {
+            width: 30px;
+            height: 30px;
+        }
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 10px 4px 6px;
+            border-radius: 20px;
+            transition: var(--transition);
+        }
+        .topbar-user:hover {
+            background: var(--surface-secondary);
+        }
+        .topbar-user .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--thma-blue-10);
+            color: var(--thma-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .lang-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            font-family: var(--font);
+        }
+        .lang-toggle:hover {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Search & Filters */
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-bar .search-input-wrap {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .search-bar .search-input-wrap input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9375rem;
+            font-family: var(--font);
+            background: var(--surface);
+            transition: var(--transition);
+            outline: none;
+        }
+        .search-bar .search-input-wrap input:focus {
+            border-color: var(--thma-blue);
+            box-shadow: 0 0 0 3px var(--thma-blue-10);
+        }
+        .search-bar .search-input-wrap .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+        .search-bar .search-input-wrap .search-icon svg {
+            display: block;
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-row .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-row .filter-group label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .filter-row .filter-group select,
+        .filter-row .filter-group input {
+            padding: 8px 36px 8px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 0.8125rem;
+            font-family: var(--font);
+            background: var(--surface);
+            color: var(--text-primary);
+            outline: none;
+            cursor: pointer;
+            min-width: 140px;
+        }
+        .filter-row .filter-group input[type="text"] {
+            padding: 8px 12px;
+            min-width: 120px;
+        }
+        .filter-row .filter-group select:focus,
+        .filter-row .filter-group input:focus {
+            border-color: var(--thma-blue);
+            box-shadow: 0 0 0 3px var(--thma-blue-10);
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-left: auto;
+        }
+        .sort-options .sort-label {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .sort-btn {
+            padding: 6px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: var(--surface);
+            color: var(--text-secondary);
+            transition: var(--transition);
+            font-family: var(--font);
+        }
+        .sort-btn:hover {
+            border-color: var(--text-tertiary);
+        }
+        .sort-btn.active {
+            background: var(--thma-blue);
+            color: #fff;
+            border-color: var(--thma-blue);
+        }
+
+        /* Course Grid */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+        }
+        .course-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .course-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--thma-blue-20);
+        }
+        .course-card .course-code {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--thma-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .course-card .course-name {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .course-card .course-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .course-card .course-meta .badge {
+            font-size: 0.6875rem;
+        }
+        .course-card .course-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 0.875rem;
+        }
+        .course-card .course-rating .stars {
+            gap: 2px;
+        }
+        .course-card .course-rating .stars .star {
+            font-size: 0.875rem;
+            cursor: default;
+        }
+        .course-card .course-rating .stars .star.active {
+            color: #FFB800;
+        }
+
+        .course-card-add {
+            background: var(--surface-secondary);
+            border: 2px dashed var(--border);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            min-height: 140px;
+        }
+        .course-card-add:hover {
+            border-color: var(--thma-blue);
+            background: var(--thma-blue-10);
+            color: var(--thma-blue);
+        }
+        .course-card-add .add-icon {
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        .course-card-add .add-text {
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ─────────────── Course Detail ─────────────── */
+        #course-detail-view {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .detail-header .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+            transition: var(--transition);
+        }
+        .detail-header .back-btn:hover {
+            color: var(--text-primary);
+        }
+        .detail-header .detail-title {
+            flex: 1;
+        }
+        .detail-header .detail-title h1 {
+            font-size: 1.625rem;
+            font-weight: 700;
+        }
+        .detail-header .detail-title .detail-code {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            background: var(--surface-secondary);
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+        }
+        .detail-info .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-info .info-item .label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-tertiary);
+        }
+        .detail-info .info-item .value {
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        .detail-rating-summary {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: var(--surface);
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .detail-rating-summary .big-rating {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .detail-rating-summary .big-rating .number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .detail-rating-summary .big-rating .total {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .detail-rating-summary .stars {
+            gap: 3px;
+        }
+        .detail-rating-summary .stars .star {
+            font-size: 1.25rem;
+            cursor: default;
+        }
+        .detail-rating-summary .stars .star.active {
+            color: #FFB800;
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .reviews-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .reviews-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        .reviews-header .review-tools {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .reviews-header .review-tools select {
+            padding: 6px 32px 6px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 0.8125rem;
+            font-family: var(--font);
+            background: var(--surface);
+            color: var(--text-primary);
+            outline: none;
+            cursor: pointer;
+        }
+        .reviews-header .review-tools select:focus {
+            border-color: var(--thma-blue);
+        }
+
+        /* Inline review form */
+        .review-form-inline {
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: var(--transition);
+            display: none;
+        }
+        .review-form-inline.visible {
+            display: block;
+        }
+        .review-form-inline:hover {
+            border-color: var(--thma-blue-20);
+        }
+        .review-form-inline .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .review-form-inline .form-row .input-group {
+            margin-bottom: 0;
+        }
+        .review-form-inline .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .review-form-inline textarea {
+            min-height: 60px;
+        }
+        .review-toggle-btn {
+            margin-left: auto;
+        }
+
+        .review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .review-item {
+            background: var(--surface);
+            padding: 18px 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .review-item:hover {
+            border-color: var(--thma-blue-20);
+        }
+        .review-item .review-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .review-item .review-meta {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+        .review-item .review-meta strong {
+            color: var(--text-primary);
+        }
+        .review-item .review-stars {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0 6px;
+        }
+        .review-item .review-stars .stars .star {
+            font-size: 0.875rem;
+            cursor: default;
+        }
+        .review-item .review-stars .stars .star.active {
+            color: #FFB800;
+        }
+        .review-item .review-categories {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 6px 0 8px;
+        }
+        .review-item .review-categories .cat {
+            font-size: 0.6875rem;
+            padding: 2px 10px;
+            border-radius: 12px;
+            background: var(--surface-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .review-item .review-categories .cat .cat-label {
+            font-weight: 500;
+            color: var(--text-tertiary);
+        }
+        .review-item .review-categories .cat .cat-value {
+            font-weight: 600;
+        }
+        .review-item .review-comment {
+            margin-top: 8px;
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        .review-item .review-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ─────────────── Profile Modal ─────────────── */
+        .profile-review-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            background: var(--surface-secondary);
+        }
+        .profile-review-item .review-meta-sm {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+        .profile-review-item .review-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ─────────────── Redesigned Add Course Modal ─────────────── */
+        .modal .form-section {
+            background: var(--surface-secondary);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .modal .form-section .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .modal .form-section .form-group {
+            margin-bottom: 0;
+        }
+        .modal .form-section .form-group label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .modal .form-section .form-group input,
+        .modal .form-section .form-group select {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 0.9375rem;
+            font-family: var(--font);
+            background: var(--surface);
+            color: var(--text-primary);
+            width: 100%;
+            outline: none;
+            transition: var(--transition);
+        }
+        .modal .form-section .form-group input:focus,
+        .modal .form-section .form-group select:focus {
+            border-color: var(--thma-blue);
+            box-shadow: 0 0 0 3px var(--thma-blue-10);
+        }
+        .modal .form-section .form-group input[list] {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236E6E73' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+
+        .modal .duplicate-hint {
+            background: var(--thma-blue-10);
+            padding: 12px 16px;
+            border-radius: var(--radius-xs);
+            margin: 12px 0 16px;
+            color: var(--thma-blue);
+            font-size: 0.875rem;
+            display: none;
+        }
+        .modal .duplicate-hint.visible {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .modal .form-section .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ─────────────── Responsive ─────────────── */
+        @media (max-width: 768px) {
+            #app {
+                padding: 12px 14px 30px;
+            }
+            .auth-card {
+                padding: 32px 24px;
+            }
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .topbar-actions {
+                justify-content: space-between;
+            }
+            .search-bar {
+                flex-direction: column;
+            }
+            .search-bar .search-input-wrap {
+                width: 100%;
+            }
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-row .filter-group {
+                width: 100%;
+            }
+            .filter-row .filter-group select,
+            .filter-row .filter-group input {
+                width: 100%;
+                min-width: unset;
+            }
+            .sort-options {
+                margin-left: 0;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-header {
+                flex-direction: column;
+            }
+            .detail-info {
+                grid-template-columns: 1fr 1fr;
+            }
+            .reviews-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .reviews-header .review-tools {
+                flex-wrap: wrap;
+            }
+            .modal {
+                padding: 24px 20px;
+                margin: 10px;
+                max-width: 100%;
+            }
+            .review-item .review-top {
+                flex-direction: column;
+            }
+            .toast-container {
+                top: 12px;
+                right: 12px;
+                max-width: calc(100% - 24px);
+            }
+            .review-form-inline .form-row {
+                grid-template-columns: 1fr;
+            }
+            .profile-review-item .review-actions {
+                flex-wrap: wrap;
+            }
+            .modal .form-section .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 24px 16px;
+            }
+            .detail-info {
+                grid-template-columns: 1fr;
+            }
+            .detail-rating-summary {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .course-card {
+                padding: 16px;
+            }
+            .review-form-inline .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+
+        <!-- ─── TOAST CONTAINER ─── -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- ─── AUTH VIEW ─── -->
+        <div id="auth-view">
+            <div class="auth-card">
+                <div class="logo">
+                    <svg viewBox="0 0 36 36" fill="none">
+                        <rect x="2" y="2" width="32" height="32" rx="8" fill="#0000FF" />
+                        <path d="M10 14h16M10 18h12M10 22h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+                        <circle cx="26" cy="22" r="4" stroke="#fff" stroke-width="2" />
+                    </svg>
+                    <span>THMA Feedback</span>
+                </div>
+                <p class="subtitle" id="authSubtitle">Share your course experience with fellow students</p>
+
+                <!-- Language toggle on login page -->
+                <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+                    <button class="lang-toggle" id="authLangToggle">🇬🇧 EN</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm">
+                    <div class="input-group mb-2">
+                        <label for="loginEmail" id="loginEmailLabel">Email</label>
+                        <input type="email" id="loginEmail" placeholder="student@stud.hs-mannheim.de" required />
+                    </div>
+                    <div class="input-group mb-2">
+                        <label for="loginPassword" id="loginPasswordLabel">Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">Sign In</button>
+                </form>
+
+                <div class="auth-divider">or</div>
+
+                <!-- Signup Form -->
+                <form id="signupForm">
+                    <div class="input-group mb-2">
+                        <label for="signupName" id="signupNameLabel">Full Name</label>
+                        <input type="text" id="signupName" placeholder="Your name (optional)" />
+                    </div>
+                    <div class="input-group mb-2">
+                        <label for="signupEmail" id="signupEmailLabel">Student Email</label>
+                        <input type="email" id="signupEmail" placeholder="12345678@stud.hs-mannheim.de" required />
+                    </div>
+                    <div class="input-group mb-2">
+                        <label for="signupPassword" id="signupPasswordLabel">Password</label>
+                        <input type="password" id="signupPassword" placeholder="••••••••" required minlength="6" />
+                    </div>
+                    <div class="input-group mb-2">
+                        <label for="signupConfirm" id="signupConfirmLabel">Confirm Password</label>
+                        <input type="password" id="signupConfirm" placeholder="••••••••" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="signupBtn">Create Account</button>
+                </form>
+
+                <div class="auth-toggle" id="authToggle">
+                    <span id="authToggleText">Already have an account?</span> <a id="toggleAuthLink">Sign In</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── MAIN VIEW ─── -->
+        <div id="main-view" class="hidden">
+
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-brand">
+                    <svg viewBox="0 0 36 36" fill="none" width="30" height="30">
+                        <rect x="2" y="2" width="32" height="32" rx="8" fill="#0000FF" />
+                        <path d="M10 14h16M10 18h12M10 22h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+                        <circle cx="26" cy="22" r="4" stroke="#fff" stroke-width="2" />
+                    </svg>
+                    THMA Feedback
+                </div>
+                <div class="topbar-actions">
+                    <button class="lang-toggle" id="langToggle">🇬🇧 EN</button>
+                    <div class="topbar-user" id="profileTrigger">
+                        <div class="avatar" id="userAvatar">M</div>
+                        <span id="userNameDisplay">User</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="addCourseBtn">+ New Course</button>
+                    <button class="btn btn-ghost btn-sm" id="logoutBtn">Sign Out</button>
+                </div>
+            </header>
+
+            <!-- Search & Filters -->
+            <section class="search-section">
+                <div class="search-bar">
+                    <div class="search-input-wrap">
+                        <span class="search-icon">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="11" cy="11" r="7" />
+                                <line x1="16" y1="16" x2="22" y2="22" />
+                            </svg>
+                        </span>
+                        <input type="text" id="searchInput" placeholder="Search for courses by name or code…" />
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="facultyFilter" id="facultyFilterLabel">Faculty</label>
+                        <select id="facultyFilter">
+                            <option value="">All Faculties</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="fieldFilter" id="fieldFilterLabel">Field of Study</label>
+                        <select id="fieldFilter">
+                            <option value="">All Fields</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="semesterFilter" id="semesterFilterLabel">Semester</label>
+                        <select id="semesterFilter">
+                            <option value="">All Semesters</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="professorFilter" id="professorFilterLabel">Professor</label>
+                        <input type="text" id="professorFilter" list="professorSuggestions" placeholder="Professor name…" />
+                        <datalist id="professorSuggestions"></datalist>
+                    </div>
+                    <div class="sort-options">
+                        <span class="sort-label" id="sortLabel">Sort:</span>
+                        <button class="sort-btn active" data-sort="alpha" id="sortAlpha">A–Z</button>
+                        <button class="sort-btn" data-sort="rating-desc" id="sortHigh">★ High</button>
+                        <button class="sort-btn" data-sort="rating-asc" id="sortLow">★ Low</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Course Grid -->
+            <div id="courseGrid" class="course-grid">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+        <!-- ─── COURSE DETAIL VIEW ─── -->
+        <div id="course-detail-view" class="hidden">
+            <!-- Rendered by JS -->
+        </div>
+
+        <!-- ─── MODAL: Add Course (Redesigned) ─── -->
+        <div class="modal-overlay hidden" id="addCourseModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="addCourseModalTitle">Add New Course</h2>
+                    <button class="modal-close" data-modal-close="addCourseModal">✕</button>
+                </div>
+                <form id="addCourseForm">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseCode" id="courseCodeLabel">Course Code</label>
+                                <input type="text" id="courseCode" list="codeSuggestions" placeholder="e.g. INF-101" required />
+                                <datalist id="codeSuggestions"></datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseName" id="courseNameLabel">Course Name</label>
+                                <input type="text" id="courseName" list="nameSuggestions" placeholder="e.g. Introduction to Programming" required />
+                                <datalist id="nameSuggestions"></datalist>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="courseFaculty" id="courseFacultyLabel">Faculty</label>
+                                <select id="courseFaculty" required>
+                                    <option value="">Select Faculty</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseField" id="courseFieldLabel">Field of Study</label>
+                                <select id="courseField" required>
+                                    <option value="">Select Field</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row" style="margin-top:16px;">
+                            <div class="form-group">
+                                <label for="courseSemester" id="courseSemesterLabel">Semester</label>
+                                <select id="courseSemester" required>
+                                    <option value="">Select Semester</option>
+                                    <!-- populated by JS -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="courseProfessor" id="courseProfessorLabel">Professor</label>
+                                <input type="text" id="courseProfessor" list="professorSuggestionsAdd" placeholder="e.g. Dr. Smith" required />
+                                <datalist id="professorSuggestionsAdd"></datalist>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="duplicate-hint" id="duplicateHint">
+                        ⚠️ A course with these exact details already exists. Click "Go to Course" to view it.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="submitCourseBtn">Create Course</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── MODAL: Confirm Email ─── -->
+        <div class="modal-overlay hidden" id="confirmModal">
+            <div class="modal" style="max-width:400px;">
+                <div class="modal-header">
+                    <h2 id="confirmModalTitle">📬 Confirm Your Email</h2>
+                    <button class="modal-close" data-modal-close="confirmModal">✕</button>
+                </div>
+                <p id="confirmModalText" style="margin-bottom:16px; color:var(--text-secondary);">
+                    We've sent a confirmation link to <strong id="confirmEmailDisplay"></strong>.
+                    Please check your inbox (and spam folder) and click the link to verify your account. You can close this window — the link will bring you back here and sign you in automatically.
+                </p>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" id="resendEmailBtn" style="flex:1;">Resend email</button>
+                    <button class="btn btn-primary" data-modal-close="confirmModal" style="flex:1;">Got it</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── MODAL: Profile ─── -->
+        <div class="modal-overlay hidden" id="profileModal">
+            <div class="modal" style="max-width:640px;">
+                <div class="modal-header">
+                    <h2 id="profileModalTitle">My Profile</h2>
+                    <button class="modal-close" data-modal-close="profileModal">✕</button>
+                </div>
+                <div id="profileContent">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── MODAL: Edit Review ─── -->
+        <div class="modal-overlay hidden" id="editReviewModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="editReviewModalTitle">Edit Review</h2>
+                    <button class="modal-close" data-modal-close="editReviewModal">✕</button>
+                </div>
+                <form id="editReviewForm">
+                    <input type="hidden" id="editReviewId" />
+                    <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div class="input-group">
+                            <label for="editSemesterTaken" id="editSemesterTakenLabel">Semester taken</label>
+                            <select id="editSemesterTaken">
+                                <option value="1">1st semester</option>
+                                <option value="2">2nd semester</option>
+                                <option value="3">3rd semester</option>
+                                <option value="4">4th semester</option>
+                                <option value="5">5th semester</option>
+                                <option value="6">6th semester</option>
+                                <option value="7">7th semester</option>
+                                <option value="8">8th semester</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="editWorkload" id="editWorkloadLabel">Workload</label>
+                            <select id="editWorkload">
+                                <option value="1">1 – Very Light</option>
+                                <option value="2">2 – Light</option>
+                                <option value="3">3 – Moderate</option>
+                                <option value="4">4 – Heavy</option>
+                                <option value="5">5 – Very Heavy</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="editProfessor" id="editProfessorLabel">Professor</label>
+                            <select id="editProfessor">
+                                <option value="1">1 – Poor</option>
+                                <option value="2">2 – Below Avg</option>
+                                <option value="3">3 – Average</option>
+                                <option value="4">4 – Good</option>
+                                <option value="5">5 – Excellent</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="editGrades" id="editGradesLabel">Good Grades</label>
+                            <select id="editGrades">
+                                <option value="1">1 – Very Hard</option>
+                                <option value="2">2 – Hard</option>
+                                <option value="3">3 – Average</option>
+                                <option value="4">4 – Achievable</option>
+                                <option value="5">5 – Very Easy</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="editMaterial" id="editMaterialLabel">Course Material</label>
+                            <select id="editMaterial">
+                                <option value="1">1 – Poor</option>
+                                <option value="2">2 – Below Avg</option>
+                                <option value="3">3 – Average</option>
+                                <option value="4">4 – Good</option>
+                                <option value="5">5 – Excellent</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-top:12px;">
+                        <label for="editComment" id="editCommentLabel">Comment</label>
+                        <textarea id="editComment" rows="3"></textarea>
+                    </div>
+                    <div class="form-actions" style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                        <button type="button" class="btn btn-secondary" data-modal-close="editReviewModal" id="editCancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="editSaveBtn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ────────────────────────────────────────────────────────────────
+        //  TRANSLATIONS
+        // ────────────────────────────────────────────────────────────────
+
+        const translations = {
+            en: {
+                authSubtitle: 'Share your course experience with fellow students',
+                loginEmailLabel: 'Email',
+                loginPasswordLabel: 'Password',
+                loginBtn: 'Sign In',
+                signupNameLabel: 'Full Name',
+                signupEmailLabel: 'Student Email',
+                signupPasswordLabel: 'Password',
+                signupConfirmLabel: 'Confirm Password',
+                signupBtn: 'Create Account',
+                authToggleText: 'Already have an account?',
+                toggleLinkText: 'Sign In',
+                searchPlaceholder: 'Search for courses by name or code…',
+                facultyFilterLabel: 'Faculty',
+                fieldFilterLabel: 'Field of Study',
+                semesterFilterLabel: 'Semester',
+                professorFilterLabel: 'Professor',
+                sortLabel: 'Sort:',
+                sortAlpha: 'A–Z',
+                sortHigh: '★ High',
+                sortLow: '★ Low',
+                addCourseBtn: '+ New Course',
+                logoutBtn: 'Sign Out',
+                addCourseModalTitle: 'Add New Course',
+                courseCodeLabel: 'Course Code',
+                courseNameLabel: 'Course Name',
+                courseFacultyLabel: 'Faculty',
+                courseFieldLabel: 'Field of Study',
+                courseSemesterLabel: 'Semester',
+                courseProfessorLabel: 'Professor',
+                duplicateHint: '⚠️ A course with these exact details already exists. Click "Go to Course" to view it.',
+                submitCourseBtn: 'Create Course',
+                goToCourseBtn: 'Go to Course',
+                confirmModalTitle: '📬 Confirm Your Email',
+                confirmModalText: 'We\'ve sent a confirmation link to {email}. Please check your inbox and click the link to verify your account.',
+                confirmBtn: '✅ Confirm Email',
+                profileModalTitle: 'My Profile',
+                saveFacultyBtn: 'Save Faculty',
+                myReviews: 'My Reviews',
+                noReviews: 'You haven\'t posted any reviews yet.',
+                editReview: 'Edit',
+                editReviewModalTitle: 'Edit Review',
+                editSemesterTakenLabel: 'Semester taken',
+                editWorkloadLabel: 'Workload',
+                editProfessorLabel: 'Professor',
+                editGradesLabel: 'Good Grades',
+                editMaterialLabel: 'Course Material',
+                editCommentLabel: 'Comment',
+                editCancelBtn: 'Cancel',
+                editSaveBtn: 'Save Changes',
+                backBtn: '← Back to courses',
+                writeReview: '✏️ Write a Review',
+                cancelReview: '✕ Cancel Review',
+                submitReview: 'Submit Review',
+                noCoursesFound: 'No courses found',
+                languageLabel: 'Language',
+                // Toast messages
+                toastWelcome: (name) => `Welcome, ${name}!`,
+                toastSignOut: 'Signed out.',
+                toastInvalid: 'Invalid email or password.',
+                toastConfirm: 'Please confirm your email address first.',
+                toastEmailUsed: 'An account with this email already exists.',
+                toastEmailSent: 'Confirmation email sent!',
+                toastConfirmed: 'Email confirmed! You can now sign in.',
+                toastFillAll: 'Please fill in all required fields.',
+                toastDuplicate: 'This course already exists. Use "Go to Course" button.',
+                toastCourseCreated: (name) => `Course "${name}" created!`,
+                toastFacultyUpdated: 'Faculty updated!',
+                toastReviewSubmitted: 'Review submitted!',
+                toastReviewUpdated: 'Review updated!',
+                toastSignInRequired: 'Please sign in to leave a review.',
+                toastSelectSemester: 'Please select the semester you took the course.',
+                toastSelectRating: 'Please select a star rating.',
+            },
+            de: {
+                authSubtitle: 'Teile deine Kurserfahrungen mit anderen Studierenden',
+                loginEmailLabel: 'E-Mail',
+                loginPasswordLabel: 'Passwort',
+                loginBtn: 'Anmelden',
+                signupNameLabel: 'Vollständiger Name',
+                signupEmailLabel: 'Studierenden-E-Mail',
+                signupPasswordLabel: 'Passwort',
+                signupConfirmLabel: 'Passwort bestätigen',
+                signupBtn: 'Account erstellen',
+                authToggleText: 'Bereits ein Konto?',
+                toggleLinkText: 'Anmelden',
+                searchPlaceholder: 'Kurse nach Name oder Code durchsuchen…',
+                facultyFilterLabel: 'Fakultät',
+                fieldFilterLabel: 'Studienfeld',
+                semesterFilterLabel: 'Semester',
+                professorFilterLabel: 'Professor',
+                sortLabel: 'Sortieren:',
+                sortAlpha: 'A–Z',
+                sortHigh: '★ Hoch',
+                sortLow: '★ Tief',
+                addCourseBtn: '+ Neuer Kurs',
+                logoutBtn: 'Abmelden',
+                addCourseModalTitle: 'Neuen Kurs hinzufügen',
+                courseCodeLabel: 'Kurs-Code',
+                courseNameLabel: 'Kursname',
+                courseFacultyLabel: 'Fakultät',
+                courseFieldLabel: 'Studienfeld',
+                courseSemesterLabel: 'Semester',
+                courseProfessorLabel: 'Professor',
+                duplicateHint: '⚠️ Ein Kurs mit genau diesen Details existiert bereits. Klicke auf "Zum Kurs", um ihn anzusehen.',
+                submitCourseBtn: 'Kurs erstellen',
+                goToCourseBtn: 'Zum Kurs',
+                confirmModalTitle: '📬 E-Mail bestätigen',
+                confirmModalText: 'Wir haben einen Bestätigungslink an {email} gesendet. Bitte überprüfe dein Postfach und klicke auf den Link, um dein Konto zu verifizieren.',
+                confirmBtn: '✅ E-Mail bestätigen',
+                profileModalTitle: 'Mein Profil',
+                saveFacultyBtn: 'Fakultät speichern',
+                myReviews: 'Meine Bewertungen',
+                noReviews: 'Du hast noch keine Bewertungen abgegeben.',
+                editReview: 'Bearbeiten',
+                editReviewModalTitle: 'Bewertung bearbeiten',
+                editSemesterTakenLabel: 'Semester (belegt)',
+                editWorkloadLabel: 'Arbeitsaufwand',
+                editProfessorLabel: 'Professor',
+                editGradesLabel: 'Gute Noten',
+                editMaterialLabel: 'Kursmaterial',
+                editCommentLabel: 'Kommentar',
+                editCancelBtn: 'Abbrechen',
+                editSaveBtn: 'Änderungen speichern',
+                backBtn: '← Zurück zu den Kursen',
+                writeReview: '✏️ Bewertung schreiben',
+                cancelReview: '✕ Bewertung abbrechen',
+                submitReview: 'Bewertung absenden',
+                noCoursesFound: 'Keine Kurse gefunden',
+                languageLabel: 'Sprache',
+                toastWelcome: (name) => `Willkommen, ${name}!`,
+                toastSignOut: 'Abgemeldet.',
+                toastInvalid: 'Ungültige E-Mail oder Passwort.',
+                toastConfirm: 'Bitte bestätige zuerst deine E-Mail-Adresse.',
+                toastEmailUsed: 'Ein Konto mit dieser E-Mail existiert bereits.',
+                toastEmailSent: 'Bestätigungs-E-Mail gesendet!',
+                toastConfirmed: 'E-Mail bestätigt! Du kannst dich jetzt anmelden.',
+                toastFillAll: 'Bitte fülle alle erforderlichen Felder aus.',
+                toastDuplicate: 'Dieser Kurs existiert bereits. Verwende die Schaltfläche "Zum Kurs".',
+                toastCourseCreated: (name) => `Kurs "${name}" erstellt!`,
+                toastFacultyUpdated: 'Fakultät aktualisiert!',
+                toastReviewSubmitted: 'Bewertung abgeschickt!',
+                toastReviewUpdated: 'Bewertung aktualisiert!',
+                toastSignInRequired: 'Bitte melde dich an, um eine Bewertung abzugeben.',
+                toastSelectSemester: 'Bitte wähle das Semester, in dem du den Kurs belegt hast.',
+                toastSelectRating: 'Bitte wähle eine Sternebewertung.',
+            }
+        };
+
+        // ────────────────────────────────────────────────────────────────
+        //  GLOBAL STATE
+        // ────────────────────────────────────────────────────────────────
+
+        let currentLang = 'en';
+
+        function t(key, ...args) {
+            let str = translations[currentLang][key] || key;
+            if (typeof str === 'function') {
+                return str(...args);
+            }
+            if (args.length) {
+                str = str.replace(/\{(\d+)\}/g, (match, num) => args[num] || match);
+            }
+            return str;
+        }
+
+        function semesterDisplay(num) {
+            if (currentLang === 'de') {
+                return `${num}. Semester`;
+            } else {
+                const suffix = ['th', 'st', 'nd', 'rd'];
+                const v = num % 100;
+                const suf = (v >= 11 && v <= 13) ? 'th' : suffix[num % 10] || 'th';
+                return `${num}${suf} semester`;
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  DATA LAYER
+        // ────────────────────────────────────────────────────────────────
+
+        const FACULTY_FIELDS = {
+            'Fakultät für Biotechnologie': ['Biotechnologie', 'Biologische Chemie & Data Science'],
+            'Fakultät für Elektrotechnik': ['Automatisierungstechnik und Industrie 4.0', 'Energietechnik und erneuerbare Energien',
+                'Elektromobilität und autonomes Fahren'
+            ],
+            'Fakultät für Gestaltung': ['Kommunikationsdesign'],
+            'Fakultät für Informatik': ['Cyber Security', 'Informatik', 'Medizinische Informatik', 'Wirtschaftsinformatik'],
+            'Fakultät für Informationstechnik': ['Informationstechnik/Elektronik', 'Medizintechnik', 'Technische Informatik',
+                'KI-Ingenieurwissenschaften'
+            ],
+            'Fakultät für Maschinenbau': ['Maschinenbau Klassik', 'Maschinenbau Digital', 'Mechatronik'],
+            'Fakultät für Sozialwesen': ['Soziale Arbeit'],
+            'Fakultät für Verfahrens- und Chemietechnik': ['Chemische Technik', 'Verfahrenstechnik',
+                'Nachhaltige Technische Prozesse'
+            ],
+            'Fakultät für Wirtschaftsingenieurwesen': ['Wirtschaftsingenieurwesen', 'Engineering and Management International']
+        };
+
+        const ALL_FACULTIES = Object.keys(FACULTY_FIELDS);
+        const ALL_FIELDS = Object.values(FACULTY_FIELDS).flat();
+        const SEMESTER_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+        // ────────────────────────────────────────────────────────────────
+        //  SUPABASE-BACKED DATA LAYER
+        //  Replaces the old localStorage prototype. `courses`, `reviews`
+        //  and `currentUser` are kept as an in-memory cache in the same
+        //  shape the rest of the app already expects (camelCase fields),
+        //  but they are now populated from and persisted to Supabase.
+        // ────────────────────────────────────────────────────────────────
+
+        let courses = [];
+        let reviews = [];
+        let currentUser = null;   // profile row of the signed-in user, or null
+        let selectedCourseId = null;
+
+        // DB (snake_case) → app (camelCase)
+        function courseFromDb(c) {
+            return {
+                id: c.id, code: c.code, name: c.name, faculty: c.faculty,
+                fieldOfStudy: c.field_of_study, semester: c.semester, professor: c.professor,
+            };
+        }
+        function reviewFromDb(r) {
+            return {
+                id: r.id, courseId: r.course_id, userId: r.user_id, rating: Number(r.rating),
+                workload: r.workload, professor: r.professor, goodGrades: r.good_grades,
+                courseMaterial: r.course_material, semesterTaken: r.semester_taken,
+                comment: r.comment || '', createdAt: r.created_at,
+            };
+        }
+        function profileFromDb(p) {
+            return { id: p.id, name: p.name, email: p.email, faculty: p.faculty || '', lang: p.lang || 'en' };
+        }
+
+        async function loadCourses() {
+            const { data, error } = await sb.from('courses').select('*').order('name');
+            if (error) { console.error('loadCourses', error); showToast(error.message, 'error'); return; }
+            courses = data.map(courseFromDb);
+        }
+
+        async function loadReviews() {
+            const { data, error } = await sb.from('reviews').select('*');
+            if (error) { console.error('loadReviews', error); showToast(error.message, 'error'); return; }
+            reviews = data.map(reviewFromDb);
+        }
+
+        async function loadProfile(userId) {
+            const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+            if (error) { console.error('loadProfile', error); return null; }
+            return profileFromDb(data);
+        }
+
+        // Called once on page load, and again whenever Supabase reports an
+        // auth change (sign in, sign out, or the redirect after a user
+        // clicks the confirmation link in their email).
+        async function initApp() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                currentUser = await loadProfile(session.user.id);
+            } else {
+                currentUser = null;
+            }
+            if (currentUser) {
+                await Promise.all([loadCourses(), loadReviews()]);
+                if (currentUser.lang) currentLang = currentUser.lang;
+            }
+            renderApp();
+        }
+
+        sb.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && !document.getElementById('confirmModal').classList.contains('hidden')) {
+                closeModal('confirmModal');
+            }
+            await initApp();
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  HELPERS
+        // ────────────────────────────────────────────────────────────────
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        }
+
+        function getUserName(id) {
+            // Reviews are shown anonymously in the UI, so this is only ever
+            // asked about the signed-in user themselves.
+            return (currentUser && currentUser.id === id) ? currentUser.name : 'Anonymous';
+        }
+
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString(currentLang === 'de' ? 'de-DE' : 'en-US', { year: 'numeric', month: 'long' });
+        }
+
+        function renderStars(rating, size = 'sm') {
+            const cls = size === 'sm' ? 'star-sm' : size === 'md' ? 'star-md' : 'star-lg';
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += `<span class="star ${cls} ${i <= rating ? 'active' : ''}">★</span>`;
+            }
+            return html;
+        }
+
+        function getCourse(id) {
+            return courses.find(c => c.id === id);
+        }
+
+        function getReviewsForCourse(courseId) {
+            return reviews.filter(r => r.courseId === courseId);
+        }
+
+        function getFacultyOptions() { return ALL_FACULTIES; }
+
+        function getFieldOptions(faculty) {
+            if (faculty && FACULTY_FIELDS[faculty]) {
+                return FACULTY_FIELDS[faculty];
+            }
+            return ALL_FIELDS;
+        }
+
+        function getSemesterOptions() { return SEMESTER_OPTIONS; }
+
+        function getProfessorOptions() {
+            return [...new Set(courses.map(c => c.professor))].filter(Boolean).sort();
+        }
+
+        function getCourseRating(courseId) {
+            const rs = getReviewsForCourse(courseId);
+            if (rs.length === 0) return null;
+            const sum = rs.reduce((s, r) => s + r.rating, 0);
+            return sum / rs.length;
+        }
+
+        function getCategoryAverage(courseId, category) {
+            const rs = getReviewsForCourse(courseId);
+            if (rs.length === 0) return null;
+            const sum = rs.reduce((s, r) => s + (r[category] || 0), 0);
+            return sum / rs.length;
+        }
+
+        function computeRating(review) {
+            const sum = (review.workload || 0) + (review.professor || 0) + (review.goodGrades || 0) + (review.courseMaterial ||
+                0);
+            return sum / 4;
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  TOAST
+        // ────────────────────────────────────────────────────────────────
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+            <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+            <span>${message}</span>
+          `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  MODAL
+        // ────────────────────────────────────────────────────────────────
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.querySelectorAll('[data-modal-close]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(btn.dataset.modalClose);
+            });
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal(overlay.id);
+            });
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  LANGUAGE TOGGLE
+        // ────────────────────────────────────────────────────────────────
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('thma_lang', lang);
+            document.getElementById('langToggle').textContent = lang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
+            document.getElementById('authLangToggle').textContent = lang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
+            applyTranslations();
+            if (currentUser) {
+                renderCourseGrid();
+                if (!document.getElementById('course-detail-view').classList.contains('hidden') && selectedCourseId) {
+                    showCourseDetail(selectedCourseId);
+                }
+                if (!document.getElementById('profileModal').classList.contains('hidden')) {
+                    renderProfile();
+                }
+            } else {
+                applyAuthTranslations();
+            }
+            populateAllSemesterSelects();
+        }
+
+        document.getElementById('langToggle').addEventListener('click', async () => {
+            const newLang = currentLang === 'en' ? 'de' : 'en';
+            if (currentUser) {
+                currentUser.lang = newLang;
+                sb.from('profiles').update({ lang: newLang }).eq('id', currentUser.id)
+                    .then(({ error }) => { if (error) console.error('save lang', error); });
+            }
+            setLanguage(newLang);
+        });
+
+        document.getElementById('authLangToggle').addEventListener('click', () => {
+            const newLang = currentLang === 'en' ? 'de' : 'en';
+            setLanguage(newLang);
+        });
+
+        function applyTranslations() {
+            document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+            document.getElementById('facultyFilterLabel').textContent = t('facultyFilterLabel');
+            document.getElementById('fieldFilterLabel').textContent = t('fieldFilterLabel');
+            document.getElementById('semesterFilterLabel').textContent = t('semesterFilterLabel');
+            document.getElementById('professorFilterLabel').textContent = t('professorFilterLabel');
+            document.getElementById('sortLabel').textContent = t('sortLabel');
+            document.getElementById('sortAlpha').textContent = t('sortAlpha');
+            document.getElementById('sortHigh').textContent = t('sortHigh');
+            document.getElementById('sortLow').textContent = t('sortLow');
+            document.getElementById('addCourseBtn').textContent = t('addCourseBtn');
+            document.getElementById('logoutBtn').textContent = t('logoutBtn');
+            document.getElementById('addCourseModalTitle').textContent = t('addCourseModalTitle');
+            document.getElementById('courseCodeLabel').textContent = t('courseCodeLabel');
+            document.getElementById('courseNameLabel').textContent = t('courseNameLabel');
+            document.getElementById('courseFacultyLabel').textContent = t('courseFacultyLabel');
+            document.getElementById('courseFieldLabel').textContent = t('courseFieldLabel');
+            document.getElementById('courseSemesterLabel').textContent = t('courseSemesterLabel');
+            document.getElementById('courseProfessorLabel').textContent = t('courseProfessorLabel');
+            const hint = document.getElementById('duplicateHint');
+            hint.textContent = t('duplicateHint');
+            const submitBtn = document.getElementById('submitCourseBtn');
+            if (!submitBtn.textContent.includes('Go to Course')) {
+                submitBtn.textContent = t('submitCourseBtn');
+            }
+            document.getElementById('confirmModalTitle').textContent = t('confirmModalTitle');
+            document.getElementById('profileModalTitle').textContent = t('profileModalTitle');
+            document.getElementById('editReviewModalTitle').textContent = t('editReviewModalTitle');
+            document.getElementById('editSemesterTakenLabel').textContent = t('editSemesterTakenLabel');
+            document.getElementById('editWorkloadLabel').textContent = t('editWorkloadLabel');
+            document.getElementById('editProfessorLabel').textContent = t('editProfessorLabel');
+            document.getElementById('editGradesLabel').textContent = t('editGradesLabel');
+            document.getElementById('editMaterialLabel').textContent = t('editMaterialLabel');
+            document.getElementById('editCommentLabel').textContent = t('editCommentLabel');
+            document.getElementById('editCancelBtn').textContent = t('editCancelBtn');
+            document.getElementById('editSaveBtn').textContent = t('editSaveBtn');
+            applyAuthTranslations();
+            populateAllSemesterSelects();
+            if (!document.getElementById('course-detail-view').classList.contains('hidden') && selectedCourseId) {
+                showCourseDetail(selectedCourseId);
+            }
+        }
+
+        function applyAuthTranslations() {
+            document.getElementById('authSubtitle').textContent = t('authSubtitle');
+            document.getElementById('loginEmailLabel').textContent = t('loginEmailLabel');
+            document.getElementById('loginPasswordLabel').textContent = t('loginPasswordLabel');
+            document.getElementById('loginBtn').textContent = t('loginBtn');
+            document.getElementById('signupNameLabel').textContent = t('signupNameLabel');
+            document.getElementById('signupEmailLabel').textContent = t('signupEmailLabel');
+            document.getElementById('signupPasswordLabel').textContent = t('signupPasswordLabel');
+            document.getElementById('signupConfirmLabel').textContent = t('signupConfirmLabel');
+            document.getElementById('signupBtn').textContent = t('signupBtn');
+            document.getElementById('authToggleText').textContent = t('authToggleText');
+            document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
+        }
+
+        function populateAllSemesterSelects() {
+            const semSelect = document.getElementById('courseSemester');
+            if (semSelect) {
+                const currentVal = semSelect.value;
+                semSelect.innerHTML = `<option value="">${t('courseSemesterLabel')}</option>`;
+                SEMESTER_OPTIONS.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = semesterDisplay(parseInt(s));
+                    semSelect.appendChild(opt);
+                });
+                if (SEMESTER_OPTIONS.includes(currentVal)) semSelect.value = currentVal;
+            }
+
+            const inlineSem = document.getElementById('inlineSemesterTaken');
+            if (inlineSem) {
+                const val = inlineSem.value;
+                inlineSem.innerHTML = SEMESTER_OPTIONS.map(s =>
+                    `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`
+                ).join('');
+                if (SEMESTER_OPTIONS.includes(val)) inlineSem.value = val;
+            }
+
+            const editSem = document.getElementById('editSemesterTaken');
+            if (editSem) {
+                const val = editSem.value;
+                editSem.innerHTML = SEMESTER_OPTIONS.map(s =>
+                    `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`
+                ).join('');
+                if (SEMESTER_OPTIONS.includes(val)) editSem.value = val;
+            }
+
+            const filterSem = document.getElementById('semesterFilter');
+            if (filterSem) {
+                const val = filterSem.value;
+                filterSem.innerHTML = `<option value="">${t('semesterFilterLabel')}</option>`;
+                SEMESTER_OPTIONS.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = semesterDisplay(parseInt(s));
+                    filterSem.appendChild(opt);
+                });
+                if (SEMESTER_OPTIONS.includes(val)) filterSem.value = val;
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  AUTH
+        // ────────────────────────────────────────────────────────────────
+
+        const authView = document.getElementById('auth-view');
+        const mainView = document.getElementById('main-view');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const toggleLink = document.getElementById('toggleAuthLink');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmEmailDisplay = document.getElementById('confirmEmailDisplay');
+        let pendingSignupEmail = '';
+
+        let isLogin = true;
+
+        function setAuthMode(login) {
+            isLogin = login;
+            if (login) {
+                document.querySelector('#loginForm').style.display = 'block';
+                document.querySelector('#signupForm').style.display = 'none';
+                document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
+                document.querySelector('.auth-divider').style.display = 'block';
+            } else {
+                document.querySelector('#loginForm').style.display = 'none';
+                document.querySelector('#signupForm').style.display = 'block';
+                document.getElementById('toggleAuthLink').textContent = t('toggleLinkText');
+                document.querySelector('.auth-divider').style.display = 'none';
+            }
+        }
+
+        toggleLink.addEventListener('click', () => setAuthMode(!isLogin));
+        setAuthMode(true);
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+            submitBtn.disabled = false;
+            if (error) {
+                if (error.message.toLowerCase().includes('confirm')) {
+                    showToast(t('toastConfirm'), 'error');
+                } else {
+                    showToast(t('toastInvalid'), 'error');
+                }
+                return;
+            }
+
+            currentUser = await loadProfile(data.user.id);
+            if (!currentUser) { showToast('Could not load your profile.', 'error'); return; }
+            await Promise.all([loadCourses(), loadReviews()]);
+            if (currentUser.lang) setLanguage(currentUser.lang);
+            showToast(t('toastWelcome', currentUser.name), 'success');
+            renderApp();
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value.trim() || 'Student';
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+
+            if (!ALLOWED_EMAIL_DOMAINS.some(d => email.toLowerCase().endsWith('@' + d))) {
+                showToast(`Please use your student email (${ALLOWED_EMAIL_DOMAINS.map(d => '@' + d).join(' or ')}).`, 'error');
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters.', 'error');
+                return;
+            }
+            if (password !== confirm) {
+                showToast('Passwords do not match.', 'error');
+                return;
+            }
+
+            const submitBtn = signupForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            const { data, error } = await sb.auth.signUp({
+                email, password,
+                options: {
+                    data: { name },
+                    emailRedirectTo: window.location.href.split('#')[0].split('?')[0],
+                },
+            });
+
+            submitBtn.disabled = false;
+
+            if (error) {
+                if (error.message.toLowerCase().includes('registered') || error.status === 422) {
+                    showToast(t('toastEmailUsed'), 'error');
+                } else {
+                    showToast(error.message, 'error');
+                }
+                return;
+            }
+            // Supabase returns a user with an empty identities[] array (no error)
+            // when the email already exists, to avoid leaking which emails are
+            // registered. Treat that the same as "email already used".
+            if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                showToast(t('toastEmailUsed'), 'error');
+                return;
+            }
+
+            pendingSignupEmail = email;
+            confirmEmailDisplay.textContent = email;
+            openModal('confirmModal');
+            showToast(t('toastEmailSent'), 'success');
+        });
+
+        document.getElementById('resendEmailBtn').addEventListener('click', async () => {
+            if (!pendingSignupEmail) return;
+            const { error } = await sb.auth.resend({ type: 'signup', email: pendingSignupEmail });
+            showToast(error ? error.message : 'Confirmation email resent.', error ? 'error' : 'success');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await sb.auth.signOut();
+            currentUser = null;
+            showToast(t('toastSignOut'), 'info');
+            renderApp();
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  RENDER: APP
+        // ────────────────────────────────────────────────────────────────
+
+        function renderApp() {
+            if (currentUser) {
+                authView.classList.add('hidden');
+                mainView.classList.remove('hidden');
+                document.getElementById('course-detail-view').classList.add('hidden');
+                document.getElementById('userNameDisplay').textContent = currentUser.name;
+                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                populateFilters();
+                renderCourseGrid();
+                updateAutocompleteSuggestions();
+                applyTranslations();
+            } else {
+                authView.classList.remove('hidden');
+                mainView.classList.add('hidden');
+                document.getElementById('course-detail-view').classList.add('hidden');
+                applyAuthTranslations();
+                const savedLang = localStorage.getItem('thma_lang');
+                if (savedLang && savedLang !== currentLang) {
+                    setLanguage(savedLang);
+                }
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  AUTOCOMPLETE SUGGESTIONS
+        // ────────────────────────────────────────────────────────────────
+
+        function updateAutocompleteSuggestions() {
+            const profSuggestions = document.getElementById('professorSuggestions');
+            const profs = getProfessorOptions();
+            profSuggestions.innerHTML = profs.map(p => `<option value="${p}">`).join('');
+
+            const profAdd = document.getElementById('professorSuggestionsAdd');
+            profAdd.innerHTML = profs.map(p => `<option value="${p}">`).join('');
+
+            const codes = [...new Set(courses.map(c => c.code))].sort();
+            document.getElementById('codeSuggestions').innerHTML = codes.map(c => `<option value="${c}">`).join('');
+
+            const names = [...new Set(courses.map(c => c.name))].sort();
+            document.getElementById('nameSuggestions').innerHTML = names.map(n => `<option value="${n}">`).join('');
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  POPULATE FILTERS
+        // ────────────────────────────────────────────────────────────────
+
+        function populateFilters() {
+            const facultySelect = document.getElementById('facultyFilter');
+            const fieldSelect = document.getElementById('fieldFilter');
+            const semesterSelect = document.getElementById('semesterFilter');
+            const professorInput = document.getElementById('professorFilter');
+
+            const currentFaculty = facultySelect.value;
+            const currentField = fieldSelect.value;
+            const currentSemester = semesterSelect.value;
+            const currentProfessor = professorInput.value;
+
+            const faculties = getFacultyOptions();
+            facultySelect.innerHTML = `<option value="">${t('facultyFilterLabel')}</option>`;
+            faculties.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                facultySelect.appendChild(opt);
+            });
+            if (currentUser && currentUser.faculty) {
+                if (faculties.includes(currentUser.faculty)) {
+                    facultySelect.value = currentUser.faculty;
+                }
+            } else if (faculties.includes(currentFaculty)) {
+                facultySelect.value = currentFaculty;
+            }
+
+            const selectedFaculty = facultySelect.value;
+            const fields = getFieldOptions(selectedFaculty || '');
+            fieldSelect.innerHTML = `<option value="">${t('fieldFilterLabel')}</option>`;
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                fieldSelect.appendChild(opt);
+            });
+            if (fields.includes(currentField)) fieldSelect.value = currentField;
+
+            semesterSelect.innerHTML = `<option value="">${t('semesterFilterLabel')}</option>`;
+            SEMESTER_OPTIONS.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = semesterDisplay(parseInt(s));
+                semesterSelect.appendChild(opt);
+            });
+            if (SEMESTER_OPTIONS.includes(currentSemester)) semesterSelect.value = currentSemester;
+
+            professorInput.value = currentProfessor;
+
+            populateFacultyFieldDropdowns();
+            updateAutocompleteSuggestions();
+        }
+
+        function populateFacultyFieldDropdowns() {
+            const facSelect = document.getElementById('courseFaculty');
+            const fieldSelect = document.getElementById('courseField');
+
+            facSelect.innerHTML = `<option value="">${t('courseFacultyLabel')}</option>`;
+            ALL_FACULTIES.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                facSelect.appendChild(opt);
+            });
+
+            const selectedFaculty = facSelect.value;
+            const fields = getFieldOptions(selectedFaculty || '');
+            fieldSelect.innerHTML = `<option value="">${t('courseFieldLabel')}</option>`;
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                fieldSelect.appendChild(opt);
+            });
+        }
+
+        document.getElementById('courseFaculty').addEventListener('change', function() {
+            const faculty = this.value;
+            const fieldSelect = document.getElementById('courseField');
+            const fields = getFieldOptions(faculty || '');
+            fieldSelect.innerHTML = `<option value="">${t('courseFieldLabel')}</option>`;
+            fields.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f;
+                fieldSelect.appendChild(opt);
+            });
+            checkDuplicateCourse();
+        });
+
+        document.getElementById('courseCode').addEventListener('input', checkDuplicateCourse);
+        document.getElementById('courseName').addEventListener('input', checkDuplicateCourse);
+        document.getElementById('courseFaculty').addEventListener('change', checkDuplicateCourse);
+        document.getElementById('courseField').addEventListener('change', checkDuplicateCourse);
+        document.getElementById('courseSemester').addEventListener('change', checkDuplicateCourse);
+        document.getElementById('courseProfessor').addEventListener('input', checkDuplicateCourse);
+
+        function checkDuplicateCourse() {
+            const code = document.getElementById('courseCode').value.trim();
+            const name = document.getElementById('courseName').value.trim();
+            const faculty = document.getElementById('courseFaculty').value;
+            const field = document.getElementById('courseField').value;
+            const semester = document.getElementById('courseSemester').value;
+            const professor = document.getElementById('courseProfessor').value.trim();
+
+            const duplicate = courses.find(c =>
+                c.code === code &&
+                c.name === name &&
+                c.faculty === faculty &&
+                c.fieldOfStudy === field &&
+                c.semester === semester &&
+                c.professor === professor
+            );
+
+            const hint = document.getElementById('duplicateHint');
+            const submitBtn = document.getElementById('submitCourseBtn');
+
+            if (duplicate && code && name && faculty && field && semester && professor) {
+                hint.classList.add('visible');
+                submitBtn.textContent = t('goToCourseBtn');
+                submitBtn.className = 'btn btn-success btn-block';
+                submitBtn.onclick = function(e) {
+                    e.preventDefault();
+                    closeModal('addCourseModal');
+                    showCourseDetail(duplicate.id);
+                };
+            } else {
+                hint.classList.remove('visible');
+                submitBtn.textContent = t('submitCourseBtn');
+                submitBtn.className = 'btn btn-primary btn-block';
+                submitBtn.onclick = null;
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  RENDER: COURSE GRID
+        // ────────────────────────────────────────────────────────────────
+
+        let currentSort = 'alpha';
+
+        function getFilteredCourses() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const faculty = document.getElementById('facultyFilter').value;
+            const field = document.getElementById('fieldFilter').value;
+            const semester = document.getElementById('semesterFilter').value;
+            const professor = document.getElementById('professorFilter').value.toLowerCase().trim();
+
+            let filtered = courses.filter(c => {
+                const matchQuery = !query ||
+                    c.name.toLowerCase().includes(query) ||
+                    c.code.toLowerCase().includes(query);
+                const matchFaculty = !faculty || c.faculty === faculty;
+                const matchField = !field || c.fieldOfStudy === field;
+                const matchSemester = !semester || c.semester === semester;
+                const matchProfessor = !professor || (c.professor && c.professor.toLowerCase().includes(professor));
+                return matchQuery && matchFaculty && matchField && matchSemester && matchProfessor;
+            });
+
+            if (currentSort === 'alpha') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (currentSort === 'rating-desc') {
+                filtered.sort((a, b) => {
+                    const ra = getCourseRating(a.id) || 0;
+                    const rb = getCourseRating(b.id) || 0;
+                    return rb - ra;
+                });
+            } else if (currentSort === 'rating-asc') {
+                filtered.sort((a, b) => {
+                    const ra = getCourseRating(a.id) || 0;
+                    const rb = getCourseRating(b.id) || 0;
+                    return ra - rb;
+                });
+            }
+            return filtered;
+        }
+
+        function shouldShowAddCard() {
+            const query = document.getElementById('searchInput').value.trim();
+            const faculty = document.getElementById('facultyFilter').value;
+            const field = document.getElementById('fieldFilter').value;
+            const semester = document.getElementById('semesterFilter').value;
+            const professor = document.getElementById('professorFilter').value.trim();
+
+            if (query || field || semester || professor) return false;
+
+            if (faculty) {
+                if (!currentUser || !currentUser.faculty) return false;
+                return faculty === currentUser.faculty;
+            }
+            return true;
+        }
+
+        function renderCourseGrid() {
+            const grid = document.getElementById('courseGrid');
+            const filtered = getFilteredCourses();
+
+            let html = '';
+            const showAdd = shouldShowAddCard();
+
+            if (showAdd) {
+                html += `
+              <div class="course-card course-card-add" id="addCourseCard">
+                <div class="add-icon">+</div>
+                <div class="add-text">${t('addCourseBtn')}</div>
+              </div>
+            `;
+            }
+
+            if (filtered.length === 0 && !showAdd) {
+                html += `
+              <div class="empty-state" style="grid-column:1/-1;">
+                <div class="empty-icon">📚</div>
+                <h3>${t('noCoursesFound')}</h3>
+                <p class="text-secondary">Try adjusting your search or filters.</p>
+              </div>
+            `;
+            } else {
+                filtered.forEach(c => {
+                    const rating = getCourseRating(c.id);
+                    const reviewCount = getReviewsForCourse(c.id).length;
+                    html += `
+                <div class="course-card" data-course-id="${c.id}">
+                  <div class="course-code">${c.code}</div>
+                  <div class="course-name">${c.name}</div>
+                  <div class="course-meta">
+                    <span class="badge">${c.faculty}</span>
+                    <span class="badge badge-blue">${c.fieldOfStudy}</span>
+                    <span class="badge">${semesterDisplay(parseInt(c.semester))}</span>
+                    <span class="badge">${c.professor}</span>
+                  </div>
+                  <div class="course-rating">
+                    ${rating !== null ? `
+                      <span class="stars">${renderStars(Math.round(rating), 'sm')}</span>
+                      <span>${rating.toFixed(1)}</span>
+                      <span class="text-tertiary text-sm">(${reviewCount} review${reviewCount !== 1 ? 's' : ''})</span>
+                    ` : `
+                      <span class="text-tertiary text-sm">No reviews yet</span>
+                    `}
+                  </div>
+                </div>
+              `;
+                });
+            }
+
+            grid.innerHTML = html;
+
+            if (showAdd) {
+                document.getElementById('addCourseCard').addEventListener('click', () => {
+                    populateFacultyFieldDropdowns();
+                    document.getElementById('addCourseForm').reset();
+                    document.getElementById('duplicateHint').classList.remove('visible');
+                    document.getElementById('submitCourseBtn').textContent = t('submitCourseBtn');
+                    document.getElementById('submitCourseBtn').className = 'btn btn-primary btn-block';
+                    populateAllSemesterSelects();
+                    openModal('addCourseModal');
+                });
+            }
+
+            grid.querySelectorAll('.course-card:not(.course-card-add)').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.dataset.courseId;
+                    showCourseDetail(id);
+                });
+            });
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  COURSE DETAIL
+        // ────────────────────────────────────────────────────────────────
+
+        function showCourseDetail(courseId) {
+            selectedCourseId = courseId;
+            const c = getCourse(courseId);
+            if (!c) return;
+
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('course-detail-view').classList.remove('hidden');
+
+            const container = document.getElementById('course-detail-view');
+            const rating = getCourseRating(courseId);
+            const reviewList = getReviewsForCourse(courseId);
+
+            let html = `
+            <div class="detail-header">
+              <div class="detail-title">
+                <button class="back-btn" id="detailBackBtn">${t('backBtn')}</button>
+                <h1>${c.name}</h1>
+                <div class="detail-code">${c.code}</div>
+              </div>
+            </div>
+
+            <div class="detail-info">
+              <div class="info-item">
+                <span class="label">${t('facultyFilterLabel')}</span>
+                <span class="value">${c.faculty}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">${t('fieldFilterLabel')}</span>
+                <span class="value">${c.fieldOfStudy}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">${t('semesterFilterLabel')}</span>
+                <span class="value">${semesterDisplay(parseInt(c.semester))}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">${t('professorFilterLabel')}</span>
+                <span class="value">${c.professor}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Reviews</span>
+                <span class="value">${reviewList.length}</span>
+              </div>
+              ${rating !== null ? `
+                <div class="info-item">
+                  <span class="label">Average Rating</span>
+                  <span class="value">${rating.toFixed(1)} ★</span>
+                </div>
+              ` : `
+                <div class="info-item">
+                  <span class="label">Average Rating</span>
+                  <span class="value text-tertiary">No reviews</span>
+                </div>
+              `}
+            </div>
+          `;
+
+            if (reviewList.length > 0) {
+                const cats = ['workload', 'professor', 'goodGrades', 'courseMaterial'];
+                const labels = [t('editWorkloadLabel'), t('editProfessorLabel'), t('editGradesLabel'), t('editMaterialLabel')];
+                html += `
+              <div class="detail-rating-summary">
+                <div class="big-rating">
+                  <span class="number">${rating.toFixed(1)}</span>
+                  <span class="total">/ 5</span>
+                </div>
+                <span class="stars">${renderStars(Math.round(rating), 'md')}</span>
+                <span class="text-secondary text-sm">Based on ${reviewList.length} review${reviewList.length !== 1 ? 's' : ''}</span>
+                <span style="flex:1;"></span>
+                ${cats.map((cat, i) => {
+                  const avg = getCategoryAverage(courseId, cat);
+                  return avg !== null ? `
+                    <span class="badge" style="font-size:0.75rem;">
+                      ${labels[i]}: <strong>${avg.toFixed(1)}</strong>
+                    </span>
+                  ` : '';
+                }).join('')}
+              </div>
+            `;
+            }
+
+            html += `
+            <div class="reviews-section">
+              <div class="reviews-header">
+                <h2>Reviews</h2>
+                <div class="review-tools">
+                  <button class="btn btn-secondary btn-sm review-toggle-btn" id="toggleReviewForm">${t('writeReview')}</button>
+                  <select id="reviewFilterCat">
+                    <option value="">All Categories</option>
+                    <option value="workload">${t('editWorkloadLabel')}</option>
+                    <option value="professor">${t('editProfessorLabel')}</option>
+                    <option value="goodGrades">${t('editGradesLabel')}</option>
+                    <option value="courseMaterial">${t('editMaterialLabel')}</option>
+                  </select>
+                  <select id="reviewSort">
+                    <option value="recent">Most Recent</option>
+                    <option value="rating-desc">Highest Rating</option>
+                    <option value="rating-asc">Lowest Rating</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="review-form-inline" id="inlineReviewForm">
+                <div class="form-row">
+                  <div class="input-group">
+                    <label for="inlineSemesterTaken">${t('editSemesterTakenLabel')}</label>
+                    <select id="inlineSemesterTaken">
+                      ${SEMESTER_OPTIONS.map(s => `<option value="${s}">${semesterDisplay(parseInt(s))}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="inlineWorkload">${t('editWorkloadLabel')}</label>
+                    <select id="inlineWorkload">
+                      <option value="1">1 – Very Light</option>
+                      <option value="2">2 – Light</option>
+                      <option value="3">3 – Moderate</option>
+                      <option value="4">4 – Heavy</option>
+                      <option value="5">5 – Very Heavy</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="inlineProfessor">${t('editProfessorLabel')}</label>
+                    <select id="inlineProfessor">
+                      <option value="1">1 – Poor</option>
+                      <option value="2">2 – Below Avg</option>
+                      <option value="3">3 – Average</option>
+                      <option value="4">4 – Good</option>
+                      <option value="5">5 – Excellent</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="inlineGrades">${t('editGradesLabel')}</label>
+                    <select id="inlineGrades">
+                      <option value="1">1 – Very Hard</option>
+                      <option value="2">2 – Hard</option>
+                      <option value="3">3 – Average</option>
+                      <option value="4">4 – Achievable</option>
+                      <option value="5">5 – Very Easy</option>
+                    </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="inlineMaterial">${t('editMaterialLabel')}</label>
+                    <select id="inlineMaterial">
+                      <option value="1">1 – Poor</option>
+                      <option value="2">2 – Below Avg</option>
+                      <option value="3">3 – Average</option>
+                      <option value="4">4 – Good</option>
+                      <option value="5">5 – Excellent</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="input-group" style="margin-top:12px;">
+                  <label for="inlineComment">${t('editCommentLabel')}</label>
+                  <textarea id="inlineComment" placeholder="Share your experience…" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" id="cancelInlineReview">${t('editCancelBtn')}</button>
+                  <button class="btn btn-primary" id="inlineSubmitReview">${t('submitReview')}</button>
+                </div>
+              </div>
+
+              <div class="review-list" id="detailReviewList">
+                ${renderReviewItems(courseId, 'recent', '')}
+              </div>
+            </div>
+          `;
+
+            container.innerHTML = html;
+
+            document.getElementById('detailBackBtn').addEventListener('click', () => {
+                document.getElementById('course-detail-view').classList.add('hidden');
+                document.getElementById('main-view').classList.remove('hidden');
+                renderCourseGrid();
+            });
+
+            const toggleBtn = document.getElementById('toggleReviewForm');
+            const form = document.getElementById('inlineReviewForm');
+            toggleBtn.addEventListener('click', () => {
+                form.classList.toggle('visible');
+                toggleBtn.textContent = form.classList.contains('visible') ? t('cancelReview') : t('writeReview');
+            });
+            document.getElementById('cancelInlineReview').addEventListener('click', () => {
+                form.classList.remove('visible');
+                toggleBtn.textContent = t('writeReview');
+            });
+
+            document.getElementById('inlineSubmitReview').addEventListener('click', async function() {
+                const semesterTaken = document.getElementById('inlineSemesterTaken').value;
+                const workload = parseInt(document.getElementById('inlineWorkload').value);
+                const professor = parseInt(document.getElementById('inlineProfessor').value);
+                const goodGrades = parseInt(document.getElementById('inlineGrades').value);
+                const courseMaterial = parseInt(document.getElementById('inlineMaterial').value);
+                const comment = document.getElementById('inlineComment').value.trim();
+
+                if (!currentUser) {
+                    showToast(t('toastSignInRequired'), 'error');
+                    return;
+                }
+                if (!semesterTaken) {
+                    showToast(t('toastSelectSemester'), 'error');
+                    return;
+                }
+                if (reviews.some(r => r.courseId === selectedCourseId && r.userId === currentUser.id)) {
+                    showToast('You already reviewed this course — edit it from your profile instead.', 'error');
+                    return;
+                }
+
+                this.disabled = true;
+                const { data, error } = await sb.from('reviews').insert({
+                    course_id: selectedCourseId,
+                    user_id: currentUser.id,
+                    workload, professor, good_grades: goodGrades, course_material: courseMaterial,
+                    semester_taken: semesterTaken, comment,
+                }).select().single();
+                this.disabled = false;
+
+                if (error) {
+                    showToast(error.code === '23505'
+                        ? 'You already reviewed this course — edit it from your profile instead.'
+                        : error.message, 'error');
+                    return;
+                }
+                reviews.push(reviewFromDb(data));
+                showToast(t('toastReviewSubmitted'), 'success');
+                showCourseDetail(selectedCourseId);
+            });
+
+            document.getElementById('reviewFilterCat').addEventListener('change', () => {
+                const sort = document.getElementById('reviewSort').value;
+                const cat = document.getElementById('reviewFilterCat').value;
+                document.getElementById('detailReviewList').innerHTML = renderReviewItems(courseId, sort, cat);
+            });
+
+            document.getElementById('reviewSort').addEventListener('change', () => {
+                const sort = document.getElementById('reviewSort').value;
+                const cat = document.getElementById('reviewFilterCat').value;
+                document.getElementById('detailReviewList').innerHTML = renderReviewItems(courseId, sort, cat);
+            });
+        }
+
+        function renderReviewItems(courseId, sort, filterCat) {
+            let items = getReviewsForCourse(courseId);
+
+            if (filterCat) {
+                items = items.filter(r => r[filterCat] !== undefined);
+            }
+
+            if (sort === 'recent') {
+                items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else if (sort === 'rating-desc') {
+                items.sort((a, b) => b.rating - a.rating);
+            } else if (sort === 'rating-asc') {
+                items.sort((a, b) => a.rating - b.rating);
+            }
+
+            if (items.length === 0) {
+                return `
+              <div class="empty-state" style="padding:30px 20px;">
+                <p class="text-secondary">No reviews yet. Be the first to share your experience!</p>
+              </div>
+            `;
+            }
+
+            return items.map(r => {
+                const monthYear = formatDate(r.createdAt);
+                const semester = r.semesterTaken ? semesterDisplay(parseInt(r.semesterTaken)) : '—';
+                return `
+              <div class="review-item">
+                <div class="review-top">
+                  <div class="review-meta">
+                    Reviewed on <strong>${monthYear}</strong> – Took in <strong>${semester}</strong>
+                  </div>
+                  <span class="badge badge-rating">${r.rating} ★</span>
+                </div>
+                <div class="review-stars">
+                  <span class="stars">${renderStars(Math.round(r.rating), 'sm')}</span>
+                </div>
+                <div class="review-categories">
+                  <span class="cat"><span class="cat-label">${t('editWorkloadLabel')}</span> <span class="cat-value">${r.workload}/5</span></span>
+                  <span class="cat"><span class="cat-label">${t('editProfessorLabel')}</span> <span class="cat-value">${r.professor}/5</span></span>
+                  <span class="cat"><span class="cat-label">${t('editGradesLabel')}</span> <span class="cat-value">${r.goodGrades}/5</span></span>
+                  <span class="cat"><span class="cat-label">${t('editMaterialLabel')}</span> <span class="cat-value">${r.courseMaterial}/5</span></span>
+                </div>
+                ${r.comment ? `<div class="review-comment">${r.comment}</div>` : ''}
+              </div>
+            `;
+            }).join('');
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  ADD COURSE
+        // ────────────────────────────────────────────────────────────────
+
+        document.getElementById('addCourseBtn').addEventListener('click', () => {
+            populateFacultyFieldDropdowns();
+            document.getElementById('addCourseForm').reset();
+            document.getElementById('duplicateHint').classList.remove('visible');
+            document.getElementById('submitCourseBtn').textContent = t('submitCourseBtn');
+            document.getElementById('submitCourseBtn').className = 'btn btn-primary btn-block';
+            populateAllSemesterSelects();
+            openModal('addCourseModal');
+        });
+
+        document.getElementById('addCourseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const code = document.getElementById('courseCode').value.trim();
+            const name = document.getElementById('courseName').value.trim();
+            const faculty = document.getElementById('courseFaculty').value;
+            const field = document.getElementById('courseField').value;
+            const semester = document.getElementById('courseSemester').value;
+            const professor = document.getElementById('courseProfessor').value.trim();
+
+            if (!code || !name || !faculty || !field || !semester || !professor) {
+                showToast(t('toastFillAll'), 'error');
+                return;
+            }
+
+            const duplicate = courses.find(c =>
+                c.code === code &&
+                c.name === name &&
+                c.faculty === faculty &&
+                c.fieldOfStudy === field &&
+                c.semester === semester &&
+                c.professor === professor
+            );
+
+            if (duplicate) {
+                showToast(t('toastDuplicate'), 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitCourseBtn');
+            submitBtn.disabled = true;
+
+            const { data, error } = await sb.from('courses').insert({
+                code, name, faculty, field_of_study: field, semester, professor,
+                created_by: currentUser.id,
+            }).select().single();
+
+            submitBtn.disabled = false;
+
+            if (error) {
+                showToast(error.code === '23505' ? t('toastDuplicate') : error.message, 'error');
+                return;
+            }
+            courses.push(courseFromDb(data));
+            closeModal('addCourseModal');
+            showToast(t('toastCourseCreated', name), 'success');
+            populateFilters();
+            renderCourseGrid();
+            updateAutocompleteSuggestions();
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  PROFILE
+        // ────────────────────────────────────────────────────────────────
+
+        document.getElementById('profileTrigger').addEventListener('click', () => {
+            if (!currentUser) return;
+            renderProfile();
+            openModal('profileModal');
+        });
+
+        function renderProfile() {
+            const container = document.getElementById('profileContent');
+            const user = currentUser;
+            const userReviews = reviews.filter(r => r.userId === user.id);
+
+            let html = `
+            <div style="margin-bottom:20px;">
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+                <div style="width:60px; height:60px; border-radius:50%; background:var(--thma-blue-10); color:var(--thma-blue); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:600;">
+                  ${user.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style="font-weight:600; font-size:1.125rem;">${user.name}</div>
+                  <div style="font-size:0.875rem; color:var(--text-secondary);">${user.email}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div class="input-group" style="max-width:220px;">
+                  <label for="profileFaculty">${t('facultyFilterLabel')}</label>
+                  <select id="profileFaculty">
+                    <option value="">${t('facultyFilterLabel')}</option>
+                    ${ALL_FACULTIES.map(f => `<option value="${f}" ${user.faculty === f ? 'selected' : ''}>${f}</option>`).join('')}
+                  </select>
+                  <button class="btn btn-primary btn-sm" id="saveProfileFaculty" style="margin-top:8px;">${t('saveFacultyBtn')}</button>
+                </div>
+                <div class="input-group" style="max-width:160px;">
+                  <label for="profileLang">${t('languageLabel')}</label>
+                  <select id="profileLang">
+                    <option value="en" ${user.lang === 'en' ? 'selected' : ''}>🇬🇧 English</option>
+                    <option value="de" ${user.lang === 'de' ? 'selected' : ''}>🇩🇪 Deutsch</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm" id="saveProfileLang" style="margin-top:8px;">Save</button>
+                </div>
+              </div>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:16px 0;" />
+            <div>
+              <h3 style="font-size:1rem; font-weight:600; margin-bottom:12px;">${t('myReviews')} (${userReviews.length})</h3>
+              ${userReviews.length === 0 ? `
+                <div class="text-secondary text-sm">${t('noReviews')}</div>
+              ` : `
+                ${userReviews.map(r => {
+                  const course = getCourse(r.courseId);
+                  return `
+                    <div class="profile-review-item">
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+                        <div>
+                          <div style="font-weight:600;">${course ? course.name : 'Unknown Course'}</div>
+                          <div class="review-meta-sm">${course ? course.code : ''} – Took in ${r.semesterTaken ? semesterDisplay(parseInt(r.semesterTaken)) : '—'} – ${formatDate(r.createdAt)}</div>
+                        </div>
+                        <span class="badge badge-rating">${r.rating} ★</span>
+                      </div>
+                      <div style="margin-top:6px;">
+                        ${r.comment ? `<div style="font-size:0.875rem; color:var(--text-secondary);">${r.comment}</div>` : ''}
+                      </div>
+                      <div class="review-actions">
+                        <button class="btn btn-secondary btn-sm edit-review-btn" data-review-id="${r.id}">${t('editReview')}</button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              `}
+            </div>
+          `;
+            container.innerHTML = html;
+
+            document.getElementById('saveProfileFaculty').addEventListener('click', async (e) => {
+                const faculty = document.getElementById('profileFaculty').value;
+                e.target.disabled = true;
+                const { error } = await sb.from('profiles').update({ faculty }).eq('id', currentUser.id);
+                e.target.disabled = false;
+                if (error) { showToast(error.message, 'error'); return; }
+                currentUser.faculty = faculty;
+                showToast(t('toastFacultyUpdated'), 'success');
+                populateFilters();
+                renderCourseGrid();
+                closeModal('profileModal');
+            });
+
+            document.getElementById('saveProfileLang').addEventListener('click', async (e) => {
+                const lang = document.getElementById('profileLang').value;
+                e.target.disabled = true;
+                const { error } = await sb.from('profiles').update({ lang }).eq('id', currentUser.id);
+                e.target.disabled = false;
+                if (error) { showToast(error.message, 'error'); return; }
+                currentUser.lang = lang;
+                setLanguage(lang);
+                showToast('Language updated!', 'success');
+                closeModal('profileModal');
+            });
+
+            document.querySelectorAll('.edit-review-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const reviewId = btn.dataset.reviewId;
+                    openEditReviewModal(reviewId);
+                });
+            });
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        //  EDIT REVIEW
+        // ────────────────────────────────────────────────────────────────
+
+        function openEditReviewModal(reviewId) {
+            const review = reviews.find(r => r.id === reviewId);
+            if (!review) return;
+
+            document.getElementById('editReviewId').value = review.id;
+            document.getElementById('editSemesterTaken').value = review.semesterTaken || '1';
+            document.getElementById('editWorkload').value = review.workload;
+            document.getElementById('editProfessor').value = review.professor;
+            document.getElementById('editGrades').value = review.goodGrades;
+            document.getElementById('editMaterial').value = review.courseMaterial;
+            document.getElementById('editComment').value = review.comment || '';
+
+            openModal('editReviewModal');
+        }
+
+        document.getElementById('editReviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editReviewId').value;
+            const review = reviews.find(r => r.id === id);
+            if (!review) return;
+
+            const updates = {
+                semester_taken: document.getElementById('editSemesterTaken').value,
+                workload: parseInt(document.getElementById('editWorkload').value),
+                professor: parseInt(document.getElementById('editProfessor').value),
+                good_grades: parseInt(document.getElementById('editGrades').value),
+                course_material: parseInt(document.getElementById('editMaterial').value),
+                comment: document.getElementById('editComment').value.trim(),
+            };
+
+            const submitBtn = document.getElementById('editSaveBtn');
+            if (submitBtn) submitBtn.disabled = true;
+            const { data, error } = await sb.from('reviews').update(updates).eq('id', id).select().single();
+            if (submitBtn) submitBtn.disabled = false;
+
+            if (error) { showToast(error.message, 'error'); return; }
+
+            Object.assign(review, reviewFromDb(data));
+            closeModal('editReviewModal');
+            showToast(t('toastReviewUpdated'), 'success');
+            if (!document.getElementById('profileModal').classList.contains('hidden')) {
+                renderProfile();
+            }
+            if (selectedCourseId && !document.getElementById('course-detail-view').classList.contains('hidden')) {
+                showCourseDetail(selectedCourseId);
+            }
+            renderCourseGrid();
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  SEARCH & FILTER EVENTS
+        // ────────────────────────────────────────────────────────────────
+
+        document.getElementById('searchInput').addEventListener('input', renderCourseGrid);
+        document.getElementById('fieldFilter').addEventListener('change', renderCourseGrid);
+        document.getElementById('semesterFilter').addEventListener('change', renderCourseGrid);
+        document.getElementById('professorFilter').addEventListener('input', renderCourseGrid);
+
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSort = btn.dataset.sort;
+                renderCourseGrid();
+            });
+        });
+
+        // ────────────────────────────────────────────────────────────────
+        //  INIT
+        // ────────────────────────────────────────────────────────────────
+
+        const savedLang = localStorage.getItem('thma_lang');
+        if (savedLang) {
+            currentLang = savedLang;
+        }
+        document.getElementById('langToggle').textContent = currentLang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
+        document.getElementById('authLangToggle').textContent = currentLang === 'en' ? '🇬🇧 EN' : '🇩🇪 DE';
+
+        // Shows the auth screen immediately; initApp() swaps in the real
+        // session state (and the course/review data) as soon as Supabase
+        // responds — including right after a user clicks the confirmation
+        // link in their email and lands back here.
+        renderApp();
+        initApp();
+    </script>
+</body>
+</html>
